@@ -1,0 +1,181 @@
+﻿@model HealthDesk.Application.DTOs.PatientDto
+@{
+    ViewData["Title"] = "Patient Details";
+    ViewData["ActiveMenu"] = "Patients";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-person-fill text-primary me-2"></i>
+            @Model.FullName
+        </h4>
+        <p class="text-muted mb-0">Patient profile</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id"
+           class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </a>
+        <a asp-action="Index"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Profile Card -->
+    <div class="col-lg-4">
+        <div class="card text-center">
+            <div class="card-body py-4">
+                <div class="rounded-circle d-flex align-items-center
+                            justify-content-center mx-auto mb-3"
+                     style="width:80px;height:80px;
+                            background:linear-gradient(135deg,#0d6efd,#6610f2);">
+                    <span class="text-white fw-bold"
+                          style="font-size:2rem;">
+                        @Model.FullName[0]
+                    </span>
+                </div>
+                <h5 class="fw-bold mb-1">@Model.FullName</h5>
+                <p class="text-muted mb-2">@Model.Email</p>
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success-subtle text-success">
+                        Active
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary-subtle text-secondary">
+                        Inactive
+                    </span>
+                }
+
+                <hr />
+
+                <div class="row g-2 text-center">
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted"
+                                 style="font-size:0.72rem;">
+                                Age
+                            </div>
+                            <div class="fw-bold">@Model.Age yrs</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted"
+                                 style="font-size:0.72rem;">
+                                Blood Group
+                            </div>
+                            <div class="fw-bold text-danger">
+                                @Model.BloodGroupDisplay
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted"
+                                 style="font-size:0.72rem;">
+                                Gender
+                            </div>
+                            <div class="fw-bold">@Model.GenderDisplay</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted"
+                                 style="font-size:0.72rem;">
+                                Since
+                            </div>
+                            <div class="fw-bold">
+                                @Model.CreatedAt.ToString("MMM yyyy")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2 text-primary"></i>
+                Contact Information
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Phone Number
+                        </label>
+                        <p class="mb-0 fw-semibold">
+                            @(Model.PhoneNumber ?? "—")
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Date of Birth
+                        </label>
+                        <p class="mb-0 fw-semibold">
+                            @Model.DateOfBirth.ToString("dd MMM yyyy")
+                        </p>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted small fw-semibold">
+                            Address
+                        </label>
+                        <p class="mb-0 fw-semibold">
+                            @(Model.Address ?? "—")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-telephone-plus me-2 text-primary"></i>
+                Emergency Contact
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Name
+                        </label>
+                        <p class="mb-0 fw-semibold">
+                            @(Model.EmergencyContactName ?? "—")
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Phone
+                        </label>
+                        <p class="mb-0 fw-semibold">
+                            @(Model.EmergencyContactPhone ?? "—")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.MedicalHistory))
+        {
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-file-medical me-2 text-primary"></i>
+                    Medical History
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 text-muted">@Model.MedicalHistory</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>

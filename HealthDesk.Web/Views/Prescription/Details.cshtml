@@ -1,0 +1,175 @@
+﻿@model HealthDesk.Application.DTOs.PrescriptionDto
+@{
+    ViewData["Title"] = "Prescription Details";
+    ViewData["ActiveMenu"] = "Prescriptions";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-file-earmark-medical-fill text-primary me-2"></i>
+            Prescription #@Model.Id
+        </h4>
+        <p class="text-muted mb-0">
+            Issued on @Model.PrescribedDate.ToString("dddd, dd MMMM yyyy")
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> Print
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column -->
+    <div class="col-lg-8">
+        <!-- Diagnosis -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-file-text me-2 text-primary"></i>
+                Diagnosis
+            </div>
+            <div class="card-body">
+                <p class="mb-0 fw-semibold">@Model.Diagnosis</p>
+            </div>
+        </div>
+
+        <!-- Medications -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-capsule me-2 text-primary"></i>
+                Prescribed Medications
+            </div>
+            <div class="card-body">
+                <pre class="mb-0"
+                     style="white-space:pre-wrap;font-family:inherit;">@Model.Medicines</pre>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Instructions))
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>
+                    Instructions
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">@Model.Instructions</p>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.LabTests))
+        {
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-clipboard-pulse me-2 text-primary"></i>
+                    Lab Tests
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">@Model.LabTests</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+        <!-- Patient Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-person me-2 text-primary"></i>
+                Patient Information
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr>
+                        <td class="text-muted fw-semibold" style="width:100px;">
+                            Name
+                        </td>
+                        <td class="fw-semibold">@Model.PatientName</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">ID</td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                #@Model.PatientId
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Doctor Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-person-badge me-2 text-primary"></i>
+                Prescribed By
+            </div>
+            <div class="card-body">
+                <div class="text-center py-2">
+                    <div class="rounded-circle d-flex align-items-center
+                                justify-content-center mx-auto mb-2"
+                         style="width:50px;height:50px;
+                                background:linear-gradient(
+                                135deg,#0d6efd,#6610f2);">
+                        <i class="bi bi-person-fill text-white fs-4"></i>
+                    </div>
+                    <div class="fw-bold">Dr. @Model.DoctorName</div>
+                    <small class="text-muted">Physician</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-calendar-event me-2 text-primary"></i>
+                Important Dates
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small fw-semibold d-block">
+                        Prescribed On
+                    </label>
+                    <span class="fw-semibold">
+                        @Model.PrescribedDate.ToString("dd MMM yyyy")
+                    </span>
+                </div>
+                @if (Model.FollowUpDate.HasValue)
+                {
+                    <div>
+                        <label class="text-muted small fw-semibold d-block">
+                            Follow Up Visit
+                        </label>
+                        <span class="badge bg-info-subtle text-info px-3 py-2">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            @Model.FollowUpDate.Value.ToString("dd MMM yyyy")
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style media="print">
+        .sidebar, .top-navbar, .btn, .page-header > div:last-child {
+            display: none !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+        }
+
+        body {
+            background: white !important;
+        }
+    </style>
+}

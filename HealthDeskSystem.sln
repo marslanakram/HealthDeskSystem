@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthDesk.Domain", "HealthDesk.Domain\HealthDesk.Domain.csproj", "{10643A1D-1996-4284-BB55-3844476CB3F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthDesk.Application", "HealthDesk.Application\HealthDesk.Application.csproj", "{051D4322-3697-40FA-A839-3374EC59B7BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthDesk.Infrastructure", "HealthDesk.Infrastructure\HealthDesk.Infrastructure.csproj", "{8CD4E1E0-2558-47FA-9D79-420D75C082FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthDesk.Web", "HealthDesk.Web\HealthDesk.Web.csproj", "{90E72D32-59C1-419D-9108-5C0955D4ABAE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{10643A1D-1996-4284-BB55-3844476CB3F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10643A1D-1996-4284-BB55-3844476CB3F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10643A1D-1996-4284-BB55-3844476CB3F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10643A1D-1996-4284-BB55-3844476CB3F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{051D4322-3697-40FA-A839-3374EC59B7BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{051D4322-3697-40FA-A839-3374EC59B7BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{051D4322-3697-40FA-A839-3374EC59B7BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{051D4322-3697-40FA-A839-3374EC59B7BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CD4E1E0-2558-47FA-9D79-420D75C082FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CD4E1E0-2558-47FA-9D79-420D75C082FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CD4E1E0-2558-47FA-9D79-420D75C082FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CD4E1E0-2558-47FA-9D79-420D75C082FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90E72D32-59C1-419D-9108-5C0955D4ABAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90E72D32-59C1-419D-9108-5C0955D4ABAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90E72D32-59C1-419D-9108-5C0955D4ABAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90E72D32-59C1-419D-9108-5C0955D4ABAE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8F018D25-D22B-40DB-B5E5-BD63A45185E8}
+	EndGlobalSection
+EndGlobal

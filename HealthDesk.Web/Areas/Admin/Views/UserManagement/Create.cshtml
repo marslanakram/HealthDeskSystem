@@ -1,0 +1,124 @@
+﻿@model HealthDesk.Web.Models.CreateUserViewModel
+@{
+    ViewData["Title"] = "Create User";
+    ViewData["ActiveMenu"] = "Users";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-person-plus-fill text-primary me-2"></i>
+            Create User
+        </h4>
+        <p class="text-muted mb-0">Add a new system user</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-person me-2 text-primary"></i>
+                User Details
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Validation Summary -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger py-2 mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div asp-validation-summary="All"
+                                 class="mb-0"></div>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-semibold">
+                            Full Name <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="FullName"
+                               class="form-control"
+                               placeholder="John Doe"
+                               autofocus />
+                        <span asp-validation-for="FullName"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold">
+                            Email <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control"
+                               placeholder="user@healthdesk.com" />
+                        <span asp-validation-for="Email"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-semibold">
+                            Password <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Password"
+                               type="password"
+                               class="form-control"
+                               placeholder="Minimum 8 characters" />
+                        <span asp-validation-for="Password"
+                              class="text-danger small"></span>
+                        <small class="form-text text-muted">
+                            Must contain uppercase, lowercase, and digit
+                        </small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Role" class="form-label fw-semibold">
+                            Role <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="Role"
+                                asp-items="ViewBag.Roles"
+                                class="form-select">
+                            <option value="">-- Select Role --</option>
+                        </select>
+                        <span asp-validation-for="Role"
+                              class="text-danger small"></span>
+                        <small class="form-text text-muted">
+                            This determines what the user can access
+                        </small>
+                    </div>
+
+                    <div class="alert alert-info py-2">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>
+                            <strong>Roles:</strong>
+                            Admin (full access) | Doctor (appointments, prescriptions) |
+                            Receptionist (bookings) | Nurse (view) | Patient (own data)
+                        </small>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary px-4">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i>Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,198 @@
+﻿@model HealthDesk.Application.DTOs.AppointmentDto
+@{
+    ViewData["Title"] = "Appointment Details";
+    ViewData["ActiveMenu"] = "Appointments";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-calendar-check-fill text-primary me-2"></i>
+            Appointment #@Model.Id
+        </h4>
+        <p class="text-muted mb-0">
+            @Model.AppointmentDate.ToString("dddd, dd MMMM yyyy")
+            at @Model.TimeDisplay
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        @if (User.IsInRole("Admin") || User.IsInRole("Receptionist"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id"
+               class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Info -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2 text-primary"></i>
+                Appointment Information
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Patient
+                        </label>
+                        <p class="mb-0 fw-semibold">@Model.PatientName</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Doctor
+                        </label>
+                        <p class="mb-0 fw-semibold">Dr. @Model.DoctorName</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Department
+                        </label>
+                        <p class="mb-0">@Model.DepartmentName</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Date & Time
+                        </label>
+                        <p class="mb-0 fw-semibold">
+                            @Model.AppointmentDate.ToString("dd MMM yyyy")
+                            at @Model.TimeDisplay
+                        </p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.ReasonForVisit))
+                    {
+                        <div class="col-12">
+                            <label class="text-muted small fw-semibold">
+                                Reason for Visit
+                            </label>
+                            <p class="mb-0">@Model.ReasonForVisit</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="col-12">
+                            <label class="text-muted small fw-semibold">
+                                Notes
+                            </label>
+                            <p class="mb-0">@Model.Notes</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status & Payment -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-activity me-2 text-primary"></i>
+                Status
+            </div>
+            <div class="card-body text-center py-4">
+                @{
+                    var statusClass = Model.Status switch
+                    {
+                        HealthDesk.Domain.Enums.AppointmentStatus.Pending
+                        => "warning",
+                        HealthDesk.Domain.Enums.AppointmentStatus.Confirmed
+                        => "success",
+                        HealthDesk.Domain.Enums.AppointmentStatus.Completed
+                        => "info",
+                        HealthDesk.Domain.Enums.AppointmentStatus.Cancelled
+                        => "danger",
+                        _ => "secondary"
+                    };
+                }
+                <span class="badge bg-@(statusClass)-subtle
+                             text-@statusClass px-4 py-2"
+                      style="font-size:1rem;">
+                    @Model.StatusDisplay
+                </span>
+
+                @if (User.IsInRole("Admin") ||
+                                User.IsInRole("Doctor") ||
+                                User.IsInRole("Receptionist"))
+                {
+                    <hr />
+                    <p class="text-muted small mb-2">Update Status</p>
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var status in Enum.GetValues<HealthDesk.Domain.Enums.AppointmentStatus>())
+                        {
+                            if (status != Model.Status)
+                            {
+                                <form asp-action="UpdateStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id"
+                                           value="@Model.Id" />
+                                    <input type="hidden" name="status"
+                                           value="@((int)status)" />
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-secondary w-100">
+                                        Mark as @status
+                                    </button>
+                                </form>
+                            }
+                        }
+                        @if ((User.IsInRole("Doctor") || User.IsInRole("Admin")) &&
+                                            Model.Status == HealthDesk.Domain.Enums.AppointmentStatus.Completed &&
+                                            !Model.HasPrescription)
+                        {
+                            <hr />
+                            <a asp-controller="Prescription"
+                               asp-action="Create"
+                               asp-route-appointmentId="@Model.Id"
+                               class="btn btn-primary w-100">
+                                <i class="bi bi-file-earmark-medical me-1"></i>
+                                Create Prescription
+                            </a>
+                        }
+
+                        @if (Model.HasPrescription)
+                        {
+                            <hr />
+                            <div class="alert alert-success mb-0 py-2">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <small class="fw-semibold">Prescription issued</small>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.Fee.HasValue)
+        {
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-cash me-2 text-primary"></i>
+                    Payment
+                </div>
+                <div class="card-body text-center py-4">
+                    <div class="display-6 fw-bold text-success mb-2">
+                        $@Model.Fee.Value.ToString("F2")
+                    </div>
+                    @if (Model.IsPaid)
+                    {
+                        <span class="badge bg-success-subtle text-success px-3 py-2">
+                            <i class="bi bi-check-circle-fill me-1"></i>Paid
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning-subtle text-warning px-3 py-2">
+                            <i class="bi bi-clock me-1"></i>Pending Payment
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

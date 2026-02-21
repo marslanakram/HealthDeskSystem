@@ -1,0 +1,115 @@
+﻿@model HealthDesk.Application.DTOs.AuditLogDto
+@{
+    ViewData["Title"] = "Audit Log Details";
+    ViewData["ActiveMenu"] = "AuditLog";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-file-earmark-text text-primary me-2"></i>
+            Audit Log #@Model.Id
+        </h4>
+        <p class="text-muted mb-0">
+            @Model.Timestamp.ToString("dddd, dd MMMM yyyy HH:mm:ss UTC")
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2 text-primary"></i>
+                Event Information
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted fw-semibold" style="width:140px;">
+                            Action
+                        </td>
+                        <td>
+                            <span class="badge @Model.ActionBadgeClass">
+                                <i class="bi @Model.ActionIcon me-1"></i>
+                                @Model.Action
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Entity</td>
+                        <td>
+                            @Model.EntityName
+                            @if (Model.EntityId.HasValue)
+                            {
+                                <span class="text-muted">#@Model.EntityId</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">User</td>
+                        <td class="fw-semibold">@Model.UserName</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">User ID</td>
+                        <td><small class="text-muted">@Model.UserId</small></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Timestamp</td>
+                        <td>@Model.Timestamp.ToString("dd MMM yyyy HH:mm:ss")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">IP Address</td>
+                        <td>@(Model.IpAddress ?? "—")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Changes))
+        {
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-card-text me-2 text-primary"></i>
+                    Summary
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">@Model.Changes</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-6">
+        @if (!string.IsNullOrEmpty(Model.OldValues))
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-danger-subtle">
+                    <i class="bi bi-file-earmark-minus me-2 text-danger"></i>
+                    Old Values
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0"
+                         style="font-size:0.85rem;background:#f8f9fa;padding:1rem;border-radius:6px;">@Model.OldValues</pre>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.NewValues))
+        {
+            <div class="card">
+                <div class="card-header bg-success-subtle">
+                    <i class="bi bi-file-earmark-plus me-2 text-success"></i>
+                    New Values
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0"
+                         style="font-size:0.85rem;background:#f8f9fa;padding:1rem;border-radius:6px;">@Model.NewValues</pre>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,193 @@
+﻿@model HealthDesk.Application.DTOs.CreatePatientDto
+@{
+    ViewData["Title"] = "Register Patient";
+    ViewData["ActiveMenu"] = "Patients";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-person-plus-fill text-primary me-2"></i>
+            Register Patient
+        </h4>
+        <p class="text-muted mb-0">Add a new patient to the system</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- Personal Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-person me-2 text-primary"></i>
+                    Personal Information
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName"
+                                   class="form-label fw-semibold">
+                                Full Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="FullName"
+                                   class="form-control"
+                                   placeholder="John Doe" />
+                            <span asp-validation-for="FullName"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="DateOfBirth"
+                                   class="form-label fw-semibold">
+                                Date of Birth <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="DateOfBirth"
+                                   type="date"
+                                   class="form-control" />
+                            <span asp-validation-for="DateOfBirth"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Gender"
+                                   class="form-label fw-semibold">
+                                Gender <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Gender"
+                                    asp-items="Html.GetEnumSelectList<HealthDesk.Domain.Enums.Gender>()"
+                                    class="form-select">
+                                <option value="">-- Select --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="BloodGroup"
+                                   class="form-label fw-semibold">
+                                Blood Group
+                            </label>
+                            <select asp-for="BloodGroup"
+                                    asp-items="Html.GetEnumSelectList<HealthDesk.Domain.Enums.BloodGroup>()"
+                                    class="form-select">
+                                <option value="">-- Select --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="PhoneNumber"
+                                   class="form-label fw-semibold">
+                                Phone Number
+                            </label>
+                            <input asp-for="PhoneNumber"
+                                   class="form-control"
+                                   placeholder="+1 234 567 8900" />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Address"
+                                   class="form-label fw-semibold">
+                                Address
+                            </label>
+                            <textarea asp-for="Address"
+                                      class="form-control"
+                                      rows="2"
+                                      placeholder="Street, City, State"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Credentials -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-shield-lock me-2 text-primary"></i>
+                    Account Credentials
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email"
+                                   class="form-label fw-semibold">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Email"
+                                   class="form-control"
+                                   placeholder="patient@email.com" />
+                            <span asp-validation-for="Email"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Password"
+                                   class="form-label fw-semibold">
+                                Password <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Password"
+                                   type="password"
+                                   class="form-control"
+                                   placeholder="Min 8 characters" />
+                            <span asp-validation-for="Password"
+                                  class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Contact -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-telephone-plus me-2 text-primary"></i>
+                    Emergency Contact
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="EmergencyContactName"
+                                   class="form-label fw-semibold">
+                                Contact Name
+                            </label>
+                            <input asp-for="EmergencyContactName"
+                                   class="form-control"
+                                   placeholder="Jane Doe" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="EmergencyContactPhone"
+                                   class="form-label fw-semibold">
+                                Contact Phone
+                            </label>
+                            <input asp-for="EmergencyContactPhone"
+                                   class="form-control"
+                                   placeholder="+1 234 567 8900" />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="MedicalHistory"
+                                   class="form-label fw-semibold">
+                                Medical History
+                            </label>
+                            <textarea asp-for="MedicalHistory"
+                                      class="form-control"
+                                      rows="3"
+                                      placeholder="Known allergies, chronic conditions...">
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-check-lg me-1"></i>Register Patient
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

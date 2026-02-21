@@ -1,0 +1,791 @@
+﻿@* @{
+    ViewData["Title"] = "Dashboard";
+    ViewData["ActiveMenu"] = "Dashboard";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            Welcome back,
+            <span class="text-primary">@User.Identity!.Name</span> 👋
+        </h4>
+        <p class="text-muted mb-0">Here's what's happening today</p>
+    </div>
+    <span class="badge bg-primary-subtle text-primary px-3 py-2" style="font-size:0.85rem;">
+        @(User.IsInRole("Admin") ? "Administrator" :
+                User.IsInRole("Doctor") ? "Doctor" :
+                User.IsInRole("Receptionist") ? "Receptionist" : "Patient")
+    </span>
+</div>
+
+<!-- Stat cards placeholder -->
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card"
+             style="background: linear-gradient(135deg,#0d6efd,#6610f2);">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1 text-white-50" style="font-size:0.85rem;">Total Patients</p>
+                    <div class="stat-number">—</div>
+                </div>
+                <i class="bi bi-people-fill stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card"
+             style="background: linear-gradient(135deg,#198754,#20c997);">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1 text-white-50" style="font-size:0.85rem;">Today's Appointments</p>
+                    <div class="stat-number">—</div>
+                </div>
+                <i class="bi bi-calendar-check-fill stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card"
+             style="background: linear-gradient(135deg,#fd7e14,#ffc107);">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1 text-white-50" style="font-size:0.85rem;">Total Doctors</p>
+                    <div class="stat-number">—</div>
+                </div>
+                <i class="bi bi-person-badge-fill stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card"
+             style="background: linear-gradient(135deg,#dc3545,#e83e8c);">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1 text-white-50" style="font-size:0.85rem;">Departments</p>
+                    <div class="stat-number">—</div>
+                </div>
+                <i class="bi bi-building-fill stat-icon"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-clock-history me-2 text-primary"></i>
+        Dashboard data will load here in the next step
+    </div>
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-check-circle-fill text-success me-2"
+           style="font-size:2rem;"></i>
+        <p class="mt-3 mb-0">
+            Authentication is working! Full dashboard data comes in Step 7.
+        </p>
+    </div>
+</div> *@
+
+
+@model HealthDesk.Application.DTOs.DashboardDto
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["ActiveMenu"] = "Dashboard";
+
+    var dashboardType = ViewData["DashboardType"]?.ToString() ?? "Admin";
+    var isAdmin = dashboardType == "Admin";
+    var isDoctor = dashboardType == "Doctor";
+    var isPatient = dashboardType == "Patient";
+}
+
+<!-- ── Welcome Header ──────────────────────────────────────────── -->
+<div class="page-header d-flex align-items-center
+            justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">
+            Good @(DateTime.Now.Hour < 12 ? "Morning" :
+                        DateTime.Now.Hour < 17 ? "Afternoon" : "Evening"),
+            <span class="text-primary">
+                @(isDoctor
+                                ? "Dr. " + ViewData["DoctorName"]
+                                : isPatient
+                                ? ViewData["PatientName"]
+                                : User.Identity!.Name)
+            </span> 👋
+        </h4>
+        <p class="text-muted mb-0">
+            @DateTime.Now.ToString("dddd, dd MMMM yyyy")
+        </p>
+    </div>
+    <span class="badge bg-primary px-3 py-2" style="font-size:0.85rem;">
+        <i class="bi bi-circle-fill text-success me-1"
+           style="font-size:0.5rem;"></i>
+        @dashboardType Dashboard
+    </span>
+</div>
+
+@if (Model is null)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Dashboard data could not be loaded.
+    </div>
+}
+else
+{
+    <!-- ── Stat Cards ──────────────────────────────────────────── -->
+    <div class="row g-4 mb-4">
+
+        @if (isAdmin)
+        {
+            <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card h-100"
+                     style="background:linear-gradient(
+                                    135deg,#0d6efd,#6610f2);">
+                    <div class="d-flex justify-content-between
+                                        align-items-start">
+                        <div>
+                            <p class="mb-1 text-white-50"
+                               style="font-size:0.85rem;">
+                                Total Patients
+                            </p>
+                            <div class="stat-number">
+                                @Model.TotalPatients
+                            </div>
+                            <small class="text-white-50">
+                                Registered in system
+                            </small>
+                        </div>
+                        <i class="bi bi-people-fill stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card h-100"
+                     style="background:linear-gradient(
+                                    135deg,#fd7e14,#ffc107);">
+                    <div class="d-flex justify-content-between
+                                        align-items-start">
+                        <div>
+                            <p class="mb-1 text-white-50"
+                               style="font-size:0.85rem;">
+                                Total Doctors
+                            </p>
+                            <div class="stat-number">
+                                @Model.TotalDoctors
+                            </div>
+                            <small class="text-white-50">
+                                Active staff
+                            </small>
+                        </div>
+                        <i class="bi bi-person-badge-fill stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card h-100"
+                     style="background:linear-gradient(
+                                    135deg,#198754,#20c997);">
+                    <div class="d-flex justify-content-between
+                                        align-items-start">
+                        <div>
+                            <p class="mb-1 text-white-50"
+                               style="font-size:0.85rem;">
+                                Today's Appointments
+                            </p>
+                            <div class="stat-number">
+                                @Model.TotalAppointmentsToday
+                            </div>
+                            <small class="text-white-50">
+                                Scheduled today
+                            </small>
+                        </div>
+                        <i class="bi bi-calendar-check-fill stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card h-100"
+                     style="background:linear-gradient(
+                                    135deg,#dc3545,#e83e8c);">
+                    <div class="d-flex justify-content-between
+                                        align-items-start">
+                        <div>
+                            <p class="mb-1 text-white-50"
+                               style="font-size:0.85rem;">
+                                Departments
+                            </p>
+                            <div class="stat-number">
+                                @Model.TotalDepartments
+                            </div>
+                            <small class="text-white-50">
+                                Active departments
+                            </small>
+                        </div>
+                        <i class="bi bi-building-fill stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (isAdmin)
+        {
+            <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card h-100"
+                 style="background:linear-gradient(
+                    135deg,#198754,#157347);">
+                <div class="d-flex justify-content-between
+                        align-items-start">
+                    <div>
+                        <p class="mb-1 text-white-50"
+                           style="font-size:0.85rem;">
+                            Revenue This Month
+                        </p>
+                        <div class="stat-number">
+                            $@Model.RevenueThisMonth.ToString("N0")
+                        </div>
+                        <small class="text-white-50">
+                            From paid appointments
+                        </small>
+                    </div>
+                    <i class="bi bi-cash-coin stat-icon"></i>
+                </div>
+            </div>
+        </div>
+        }
+
+        @if (isDoctor || isAdmin)
+        {
+            <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card h-100"
+                     style="background:linear-gradient(
+                                    135deg,#6f42c1,#d63384);">
+                    <div class="d-flex justify-content-between
+                                        align-items-start">
+                        <div>
+                            <p class="mb-1 text-white-50"
+                               style="font-size:0.85rem;">
+                                This Month
+                            </p>
+                            <div class="stat-number">
+                                @Model.TotalAppointmentsThisMonth
+                            </div>
+                            <small class="text-white-50">
+                                Appointments
+                            </small>
+                        </div>
+                        <i class="bi bi-calendar-month-fill stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card h-100"
+                 style="background:linear-gradient(
+                            135deg,#ffc107,#fd7e14);">
+                <div class="d-flex justify-content-between
+                                align-items-start">
+                    <div>
+                        <p class="mb-1 text-white-50"
+                           style="font-size:0.85rem;">
+                            Pending
+                        </p>
+                        <div class="stat-number">
+                            @Model.PendingAppointments
+                        </div>
+                        <small class="text-white-50">
+                            Awaiting confirmation
+                        </small>
+                    </div>
+                    <i class="bi bi-hourglass-split stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card h-100"
+                 style="background:linear-gradient(
+                            135deg,#0dcaf0,#0d6efd);">
+                <div class="d-flex justify-content-between
+                                align-items-start">
+                    <div>
+                        <p class="mb-1 text-white-50"
+                           style="font-size:0.85rem;">
+                            Completed
+                        </p>
+                        <div class="stat-number">
+                            @Model.CompletedAppointments
+                        </div>
+                        <small class="text-white-50">
+                            Successfully done
+                        </small>
+                    </div>
+                    <i class="bi bi-check-circle-fill stat-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Quick Actions ──────────────────────────────────────── -->
+    @if (isAdmin || User.IsInRole("Receptionist"))
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <h6 class="text-muted fw-semibold mb-3">
+                    <i class="bi bi-lightning-fill text-warning me-1"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-controller="Appointment"
+                   asp-action="Create"
+                   class="card text-decoration-none h-100
+                              border-primary border-opacity-25
+                              text-center p-3 d-block">
+                    <i class="bi bi-calendar-plus-fill text-primary"
+                       style="font-size:1.8rem;"></i>
+                    <div class="fw-semibold mt-2 text-dark">
+                        Book Appointment
+                    </div>
+                    <small class="text-muted">
+                        Schedule a visit
+                    </small>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-controller="Patient"
+                   asp-action="Create"
+                   class="card text-decoration-none h-100
+                              border-success border-opacity-25
+                              text-center p-3 d-block">
+                    <i class="bi bi-person-plus-fill text-success"
+                       style="font-size:1.8rem;"></i>
+                    <div class="fw-semibold mt-2 text-dark">
+                        New Patient
+                    </div>
+                    <small class="text-muted">
+                        Register patient
+                    </small>
+                </a>
+            </div>
+            @if (isAdmin)
+            {
+                <div class="col-6 col-md-3">
+                    <a asp-controller="Doctor"
+                       asp-action="Create"
+                       class="card text-decoration-none h-100
+                                      border-warning border-opacity-25
+                                      text-center p-3 d-block">
+                        <i class="bi bi-person-badge-fill text-warning"
+                           style="font-size:1.8rem;"></i>
+                        <div class="fw-semibold mt-2 text-dark">
+                            Add Doctor
+                        </div>
+                        <small class="text-muted">
+                            Register doctor
+                        </small>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-controller="Department"
+                       asp-action="Create"
+                       class="card text-decoration-none h-100
+                                      border-danger border-opacity-25
+                                      text-center p-3 d-block">
+                        <i class="bi bi-building-fill text-danger"
+                           style="font-size:1.8rem;"></i>
+                        <div class="fw-semibold mt-2 text-dark">
+                            Add Department
+                        </div>
+                        <small class="text-muted">
+                            Create department
+                        </small>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- ── Charts Row ──────────────────────────────────────────── -->
+    @if (isAdmin)
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between
+                                        align-items-center">
+                        <span>
+                            <i class="bi bi-bar-chart-fill me-2
+                                               text-primary"></i>
+                            Appointment Overview
+                        </span>
+                        <span class="badge bg-primary-subtle text-primary">
+                            This Month
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="appointmentChart"
+                                height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="bi bi-pie-chart-fill me-2
+                                           text-primary"></i>
+                        Appointment Status
+                    </div>
+                    <div class="card-body d-flex align-items-center
+                                        justify-content-center">
+                        <canvas id="statusChart" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ── Today's Appointments Table ─────────────────────────── -->
+    @if (Model.TodaysAppointments.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between
+                                align-items-center">
+                <span>
+                    <i class="bi bi-clock-fill me-2 text-primary"></i>
+                    Today's Appointments
+                    <span class="badge bg-primary-subtle text-primary ms-2">
+                        @Model.TodaysAppointments.Count()
+                    </span>
+                </span>
+                <a asp-controller="Appointment"
+                   asp-action="Index"
+                   class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                @if (!isPatient)
+                                {
+                                    <th>Doctor</th>
+                                }
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Fee</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var appt in Model.TodaysAppointments)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-light
+                                                                 text-dark fw-semibold">
+                                            <i class="bi bi-clock me-1"></i>
+                                            @appt.TimeDisplay
+                                        </span>
+                                    </td>
+                                    <td class="fw-semibold">
+                                        @appt.PatientName
+                                    </td>
+                                    @if (!isPatient)
+                                    {
+                                        <td>Dr. @appt.DoctorName</td>
+                                    }
+                                    <td class="text-muted">
+                                        @appt.DepartmentName
+                                    </td>
+                                    <td>
+                                        @{
+                                            var sc = appt.Status switch
+                                            {
+                                                HealthDesk.Domain.Enums
+                                                .AppointmentStatus.Pending
+                                                => "warning",
+                                                HealthDesk.Domain.Enums
+                                                .AppointmentStatus.Confirmed
+                                                => "success",
+                                                HealthDesk.Domain.Enums
+                                                .AppointmentStatus.Completed
+                                                => "info",
+                                                HealthDesk.Domain.Enums
+                                                .AppointmentStatus.Cancelled
+                                                => "danger",
+                                                _ => "secondary"
+                                            };
+                                        }
+                                        <span class="badge
+                                                                 bg-@(sc)-subtle
+                                                                 text-@sc">
+                                            @appt.StatusDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (appt.Fee.HasValue)
+                                        {
+                                            <span class="text-success
+                                                                         fw-semibold">
+                                                $@appt.Fee.Value
+                                                .ToString("F2")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-controller="Appointment"
+                                           asp-action="Details"
+                                           asp-route-id="@appt.Id"
+                                           class="btn btn-sm
+                                                              btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ── Recent Appointments ─────────────────────────────────── -->
+    @if (Model.RecentAppointments.Any())
+    {
+        <div class="card">
+            <div class="card-header d-flex justify-content-between
+                                align-items-center">
+                <span>
+                    <i class="bi bi-clock-history me-2 text-primary"></i>
+                    Recent Appointments
+                </span>
+                <a asp-controller="Appointment"
+                   asp-action="Index"
+                   class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Patient</th>
+                                @if (!isPatient)
+                                {
+                                    <th>Doctor</th>
+                                }
+                                <th>Status</th>
+                                <th>Paid</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var appt in Model.RecentAppointments)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">
+                                            @appt.AppointmentDate
+                                            .ToString("dd MMM yyyy")
+                                        </div>
+                                        <small class="text-muted">
+                                            @appt.TimeDisplay
+                                        </small>
+                                    </td>
+                                    <td class="fw-semibold">
+                                        @appt.PatientName
+                                    </td>
+                                    @if (!isPatient)
+                                    {
+                                        <td>Dr. @appt.DoctorName</td>
+                                    }
+                                    <td>
+                                        @{
+                                            var rc = appt.Status switch
+                                            {
+                                                HealthDesk.Domain.Enums
+                                                .AppointmentStatus.Pending
+                                                => "warning",
+                                                HealthDesk.Domain.Enums
+                                                .AppointmentStatus.Confirmed
+                                                => "success",
+                                                HealthDesk.Domain.Enums
+                                                .AppointmentStatus.Completed
+                                                => "info",
+                                                HealthDesk.Domain.Enums
+                                                .AppointmentStatus.Cancelled
+                                                => "danger",
+                                                _ => "secondary"
+                                            };
+                                        }
+                                        <span class="badge
+                                                                 bg-@(rc)-subtle
+                                                                 text-@rc">
+                                            @appt.StatusDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (appt.IsPaid)
+                                        {
+                                            <i class="bi bi-check-circle-fill
+                                                                       text-success"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-x-circle
+                                                                       text-muted"></i>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-controller="Appointment"
+                                           asp-action="Details"
+                                           asp-route-id="@appt.Id"
+                                           class="btn btn-sm
+                                                              btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ── Empty State ─────────────────────────────────────────── -->
+    @if (!Model.TodaysAppointments.Any() &&
+             !Model.RecentAppointments.Any())
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-calendar-x text-muted"
+                   style="font-size:3.5rem;opacity:0.3;"></i>
+                <h5 class="mt-3 text-muted fw-semibold">
+                    No appointments yet
+                </h5>
+                <p class="text-muted mb-4">
+                    Start by booking the first appointment.
+                </p>
+                @if (User.IsInRole("Admin") ||
+                        User.IsInRole("Receptionist"))
+                {
+                    <a asp-controller="Appointment"
+                       asp-action="Create"
+                       class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>
+                        Book Appointment
+                    </a>
+                }
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    @if (isAdmin && Model is not null)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // ── Bar Chart — Appointment Overview ─────────────────────
+            const barCtx = document
+                .getElementById('appointmentChart').getContext('2d');
+
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+                    datasets: [
+                        {
+                            label: 'Confirmed',
+                            data: [4, 7, 5, 8, 6, 3, 2],
+                            backgroundColor: 'rgba(25,135,84,0.7)',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Pending',
+                            data: [2, 3, 4, 2, 5, 1, 1],
+                            backgroundColor: 'rgba(255,193,7,0.7)',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Cancelled',
+                            data: [1, 0, 1, 2, 0, 1, 0],
+                            backgroundColor: 'rgba(220,53,69,0.7)',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { stepSize: 2 }
+                        }
+                    }
+                }
+            });
+
+            // ── Donut Chart — Appointment Status ─────────────────────
+            const donutCtx = document
+                .getElementById('statusChart').getContext('2d');
+
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed','Pending','Confirmed','Cancelled'],
+                    datasets: [{
+                        data: [
+                            @Model.CompletedAppointments,
+                            @Model.PendingAppointments,
+                            @(Model.TotalAppointmentsThisMonth
+                                                        - Model.CompletedAppointments
+                                                        - Model.PendingAppointments),
+                    0
+                ],
+                backgroundColor: [
+                    '#0dcaf0',
+                    '#ffc107',
+                    '#198754',
+                    '#dc3545'
+                ],
+                borderWidth: 0,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 16, usePointStyle: true }
+                }
+            }
+        }
+    });
+</script>
+}
+}

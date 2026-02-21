@@ -1,0 +1,128 @@
+﻿@model HealthDesk.Application.DTOs.DoctorDto
+@{
+    ViewData["Title"] = "Doctor Details";
+    ViewData["ActiveMenu"] = "Doctors";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-person-badge-fill text-primary me-2"></i>
+            Dr. @Model.FullName
+        </h4>
+        <p class="text-muted mb-0">@Model.Specialization</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id"
+           class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card text-center">
+            <div class="card-body py-4">
+                <div class="rounded-circle d-flex align-items-center
+                            justify-content-center mx-auto mb-3"
+                     style="width:90px;height:90px;
+                            background:linear-gradient(135deg,#0d6efd,#6610f2);">
+                    <i class="bi bi-person-fill text-white"
+                       style="font-size:2.5rem;"></i>
+                </div>
+                <h5 class="fw-bold mb-1">Dr. @Model.FullName</h5>
+                <p class="text-primary mb-2">@Model.Specialization</p>
+                @if (Model.IsAvailable)
+                {
+                    <span class="badge bg-success-subtle text-success">
+                        Available
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-danger-subtle text-danger">
+                        Unavailable
+                    </span>
+                }
+
+                <hr />
+
+                <div class="row g-2 text-center">
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted"
+                                 style="font-size:0.72rem;">
+                                Fee
+                            </div>
+                            <div class="fw-bold text-success">
+                                $@Model.ConsultationFee
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted"
+                                 style="font-size:0.72rem;">
+                                Shift
+                            </div>
+                            <div class="fw-bold">@Model.ShiftDisplay</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2 text-primary"></i>
+                Professional Information
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Qualification
+                        </label>
+                        <p class="mb-0 fw-semibold">
+                            @(Model.Qualification ?? "—")
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Department
+                        </label>
+                        <p class="mb-0 fw-semibold">
+                            @Model.DepartmentName
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Email
+                        </label>
+                        <p class="mb-0">@Model.Email</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Phone
+                        </label>
+                        <p class="mb-0">@(Model.PhoneNumber ?? "—")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">
+                            Joined
+                        </label>
+                        <p class="mb-0">
+                            @Model.CreatedAt.ToString("dd MMM yyyy")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

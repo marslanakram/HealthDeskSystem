@@ -1,0 +1,129 @@
+﻿@model HealthDesk.Web.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Sign In";
+    Layout = "_Layout";
+}
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center"
+     style="background: linear-gradient(135deg, #1a2340 0%, #0d6efd 100%);">
+
+    <div class="w-100" style="max-width: 440px; padding: 1rem;">
+
+        <!-- Logo / Brand -->
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center
+                        rounded-circle bg-white mb-3"
+                 style="width:64px;height:64px;">
+                <i class="bi bi-heart-pulse-fill text-primary" style="font-size:1.8rem;"></i>
+            </div>
+            <h3 class="text-white fw-bold mb-1">HealthDesk</h3>
+            <p class="text-white-50 mb-0">Hospital Management System</p>
+        </div>
+
+        <!-- Card -->
+        <div class="card shadow-lg">
+            <div class="card-body p-4">
+
+                <h5 class="fw-bold mb-1">Welcome back</h5>
+                <p class="text-muted mb-4" style="font-size:0.9rem;">
+                    Sign in to your account to continue
+                </p>
+
+                <form asp-action="Login" asp-controller="Account" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                    <!-- Validation summary -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger py-2">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <asp-validation-summary asp-validation-summary="All"
+                                                    class="mb-0 d-inline" />
+                        </div>
+                    }
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold">
+                            Email Address
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-envelope text-muted"></i>
+                            </span>
+                            <input asp-for="Email"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="you@example.com"
+                                   autocomplete="email" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-semibold">
+                            Password
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-lock text-muted"></i>
+                            </span>
+                            <input asp-for="Password"
+                                   class="form-control border-start-0 ps-0"
+                                   id="passwordInput"
+                                   placeholder="••••••••"
+                                   autocomplete="current-password" />
+                            <button class="btn btn-light border"
+                                    type="button"
+                                    onclick="togglePassword()">
+                                <i class="bi bi-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Remember me -->
+                    <div class="mb-4 d-flex align-items-center">
+                        <input asp-for="RememberMe"
+                               class="form-check-input me-2"
+                               type="checkbox" />
+                        <label asp-for="RememberMe" class="form-check-label text-muted">
+                            Keep me signed in for 8 hours
+                        </label>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Default credentials hint (remove in production) -->
+        <div class="card mt-3 border-0 bg-white bg-opacity-10">
+            <div class="card-body py-2 px-3">
+                <p class="text-white-50 mb-0" style="font-size:0.78rem;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong class="text-white-75">Default Admin:</strong>
+                    admin@healthdesk.com / ***REMOVED***
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePassword() {
+            const input   = document.getElementById('passwordInput');
+            const icon    = document.getElementById('eyeIcon');
+            const isText  = input.type === 'text';
+            input.type    = isText ? 'password' : 'text';
+            icon.className = isText ? 'bi bi-eye' : 'bi bi-eye-slash';
+        }
+    </script>
+}

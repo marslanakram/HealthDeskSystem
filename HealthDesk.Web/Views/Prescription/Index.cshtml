@@ -1,0 +1,155 @@
+﻿@model IEnumerable<HealthDesk.Application.DTOs.PrescriptionDto>
+@{
+    ViewData["Title"] = "Prescriptions";
+    ViewData["ActiveMenu"] = "Prescriptions";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-file-earmark-medical-fill text-primary me-2"></i>
+            Prescriptions
+        </h4>
+        <p class="text-muted mb-0">Medical prescriptions and records</p>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+            <i class="bi bi-table me-2 text-primary"></i>
+            All Prescriptions
+            <span class="badge bg-primary-subtle text-primary ms-2">
+                @Model.Count()
+            </span>
+        </span>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-file-earmark-medical"
+                   style="font-size:3rem;opacity:0.3;"></i>
+                <p class="mt-3 mb-0">No prescriptions found.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Diagnosis</th>
+                            <th>Date</th>
+                            <th>Follow Up</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rx in Model)
+                        {
+                            <tr>
+                                <td class="text-muted fw-semibold">
+                                    #@rx.Id
+                                </td>
+                                <td class="fw-semibold">@rx.PatientName</td>
+                                <td>Dr. @rx.DoctorName</td>
+                                <td class="text-muted" style="max-width:200px;">
+                                    <span class="text-truncate d-block">
+                                        @rx.Diagnosis
+                                    </span>
+                                </td>
+                                <td class="text-muted">
+                                    @rx.PrescribedDate.ToString("dd MMM yyyy")
+                                </td>
+                                <td>
+                                    @if (rx.FollowUpDate.HasValue)
+                                    {
+                                        <span class="badge bg-info-subtle text-info">
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            @rx.FollowUpDate.Value
+                                            .ToString("dd MMM")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Details"
+                                           asp-route-id="@rx.Id"
+                                           class="btn btn-sm btn-outline-info"
+                                           title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    title="Delete"
+                                                    onclick="confirmDelete(
+                                                                    @rx.Id, '@rx.PatientName')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle-fill
+                               text-danger me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">
+                    Are you sure you want to delete prescription for
+                    <strong id="deleteName"></strong>?
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            document.getElementById('deleteName').textContent = name;
+            document.getElementById('deleteForm').action =
+                '/Prescription/Delete/' + id;
+            new bootstrap.Modal(
+                document.getElementById('deleteModal')).show();
+        }
+    </script>
+}

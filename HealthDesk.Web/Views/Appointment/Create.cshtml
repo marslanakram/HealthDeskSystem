@@ -1,0 +1,124 @@
+﻿@model HealthDesk.Application.DTOs.CreateAppointmentDto
+@{
+    ViewData["Title"] = "Book Appointment";
+    ViewData["ActiveMenu"] = "Appointments";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-calendar-plus-fill text-primary me-2"></i>
+            Book Appointment
+        </h4>
+        <p class="text-muted mb-0">Schedule a new appointment</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-calendar-event me-2 text-primary"></i>
+                Appointment Details
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="PatientId"
+                                   class="form-label fw-semibold">
+                                Patient <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="PatientId"
+                                    asp-items="ViewBag.Patients"
+                                    class="form-select">
+                                <option value="">-- Select Patient --</option>
+                            </select>
+                            <span asp-validation-for="PatientId"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="DoctorId"
+                                   class="form-label fw-semibold">
+                                Doctor <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="DoctorId"
+                                    asp-items="ViewBag.Doctors"
+                                    class="form-select">
+                                <option value="">-- Select Doctor --</option>
+                            </select>
+                            <span asp-validation-for="DoctorId"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="AppointmentDate"
+                                   class="form-label fw-semibold">
+                                Date <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="AppointmentDate"
+                                   type="date"
+                                   class="form-control"
+                                   min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="AppointmentDate"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="AppointmentTime"
+                                   class="form-label fw-semibold">
+                                Time <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="AppointmentTime"
+                                   type="time"
+                                   class="form-control" />
+                            <span asp-validation-for="AppointmentTime"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Fee"
+                                   class="form-label fw-semibold">
+                                Consultation Fee ($)
+                            </label>
+                            <input asp-for="Fee"
+                                   type="number"
+                                   step="0.01"
+                                   class="form-control"
+                                   placeholder="0.00" />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="ReasonForVisit"
+                                   class="form-label fw-semibold">
+                                Reason for Visit
+                            </label>
+                            <textarea asp-for="ReasonForVisit"
+                                      class="form-control"
+                                      rows="3"
+                                      placeholder="Describe the reason...">
+                            </textarea>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Book Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

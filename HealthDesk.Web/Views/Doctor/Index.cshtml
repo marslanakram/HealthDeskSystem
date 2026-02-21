@@ -1,0 +1,211 @@
+﻿@model IEnumerable<HealthDesk.Application.DTOs.DoctorDto>
+@{
+    ViewData["Title"] = "Doctors";
+    ViewData["ActiveMenu"] = "Doctors";
+}
+
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-person-badge-fill text-primary me-2"></i>Doctors
+        </h4>
+        <p class="text-muted mb-0">Manage hospital doctors</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Add Doctor
+    </a>
+</div>
+
+<!-- Search -->
+<div class="card mb-4">
+    <div class="card-body py-2">
+        <form asp-action="Index" method="get" class="d-flex gap-2">
+            <input type="text"
+                   name="search"
+                   value="@ViewData["Search"]"
+                   class="form-control"
+                   placeholder="Search by name, specialization, department..." />
+            <button class="btn btn-outline-primary px-3" type="submit">
+                <i class="bi bi-search"></i>
+            </button>
+            @if (!string.IsNullOrEmpty(ViewData["Search"]?.ToString()))
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            }
+        </form>
+    </div>
+</div>
+
+<!-- Doctor Cards -->
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-person-badge"
+               style="font-size:3rem;opacity:0.3;"></i>
+            <p class="mt-3 mb-0">No doctors found.</p>
+            <a asp-action="Create" class="btn btn-primary mt-3">
+                Add First Doctor
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var doctor in Model)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="rounded-circle d-flex align-items-center
+                                                justify-content-center me-3 flex-shrink-0"
+                                 style="width:52px;height:52px;
+                                                background:linear-gradient(135deg,#0d6efd,#6610f2);">
+                                <i class="bi bi-person-fill text-white fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <h6 class="fw-bold mb-0 text-truncate">
+                                    Dr. @doctor.FullName
+                                </h6>
+                                <small class="text-primary">
+                                    @doctor.Specialization
+                                </small>
+                            </div>
+                            @if (doctor.IsAvailable)
+                            {
+                                <span class="badge bg-success-subtle text-success ms-2">
+                                    Available
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger-subtle text-danger ms-2">
+                                    Unavailable
+                                </span>
+                            }
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded text-center">
+                                    <div class="text-muted"
+                                         style="font-size:0.72rem;">
+                                        Department
+                                    </div>
+                                    <div class="fw-semibold"
+                                         style="font-size:0.82rem;">
+                                        @doctor.DepartmentName
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded text-center">
+                                    <div class="text-muted"
+                                         style="font-size:0.72rem;">
+                                        Fee
+                                    </div>
+                                    <div class="fw-semibold text-success"
+                                         style="font-size:0.82rem;">
+                                        $@doctor.ConsultationFee
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded text-center">
+                                    <div class="text-muted"
+                                         style="font-size:0.72rem;">
+                                        Shift
+                                    </div>
+                                    <div class="fw-semibold"
+                                         style="font-size:0.82rem;">
+                                        @doctor.ShiftDisplay
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded text-center">
+                                    <div class="text-muted"
+                                         style="font-size:0.72rem;">
+                                        Phone
+                                    </div>
+                                    <div class="fw-semibold"
+                                         style="font-size:0.82rem;">
+                                        @(doctor.PhoneNumber ?? "—")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a asp-action="Details"
+                               asp-route-id="@doctor.Id"
+                               class="btn btn-sm btn-outline-info flex-grow-1">
+                                <i class="bi bi-eye me-1"></i>View
+                            </a>
+                            <a asp-action="Edit"
+                               asp-route-id="@doctor.Id"
+                               class="btn btn-sm btn-outline-primary flex-grow-1">
+                                <i class="bi bi-pencil me-1"></i>Edit
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="confirmDelete(
+                                                @doctor.Id, 'Dr. @doctor.FullName')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle-fill
+                               text-danger me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">
+                    Are you sure you want to delete
+                    <strong id="deleteName"></strong>?
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            document.getElementById('deleteName').textContent = name;
+            document.getElementById('deleteForm').action =
+                '/Doctor/Delete/' + id;
+            new bootstrap.Modal(
+                document.getElementById('deleteModal')).show();
+        }
+    </script>
+}
