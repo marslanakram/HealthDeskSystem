@@ -3,6 +3,7 @@ using HealthDesk.Application.DTOs;
 using HealthDesk.Application.Interfaces;
 using HealthDesk.Domain.Entities;
 using HealthDesk.Domain.Enums;
+using static HealthDesk.Domain.Constants.PermissionConstants;
 
 namespace HealthDesk.Application.Services;
 
@@ -10,11 +11,13 @@ public class AppointmentService : IAppointmentService
 {
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly IAuditService _auditService;
 
-    public AppointmentService(IUnitOfWork uow, IMapper mapper)
+    public AppointmentService(IUnitOfWork uow, IMapper mapper, IAuditService auditService)
     {
         _uow = uow;
         _mapper = mapper;
+        _auditService = auditService;
     }
 
     public async Task<IEnumerable<AppointmentDto>> GetAllAsync()
@@ -62,6 +65,14 @@ public class AppointmentService : IAppointmentService
 
         await _uow.Appointments.AddAsync(appointment);
         await _uow.SaveChangesAsync();
+        await _auditService.LogAsync(
+    action: "Created",
+    entityName: "Appointment",
+    entityId: appointment.Id,
+    oldValues: null,
+    newValues: new { appointment.AppointmentDate, appointment.AppointmentTime, appointment.Status, appointment.ReasonForVisit, appointment.Notes, appointment.Fee, appointment.IsPaid, appointment.Patient, appointment.Doctor, appointment.Prescription },
+    changes: $"New Appointment registered: {appointment.Status}"
+);
 
         return (true, "Appointment booked successfully.", appointment.Id);
     }
@@ -72,9 +83,19 @@ public class AppointmentService : IAppointmentService
         if (appointment is null)
             return (false, "Appointment not found.");
 
+        var oldValues = new { appointment.AppointmentDate, appointment.AppointmentTime, appointment.Status, appointment.ReasonForVisit, appointment.Notes, appointment.Fee, appointment.IsPaid, appointment.Patient, appointment.Doctor, appointment.Prescription };
+
         _mapper.Map(dto, appointment);
         _uow.Appointments.Update(appointment);
         await _uow.SaveChangesAsync();
+        await _auditService.LogAsync(
+    action: "Updated",
+    entityName: "Appointment",
+    entityId: appointment.Id,
+    oldValues: oldValues,
+    newValues: new { appointment.AppointmentDate, appointment.AppointmentTime, appointment.Status, appointment.ReasonForVisit, appointment.Notes, appointment.Fee, appointment.IsPaid, appointment.Patient, appointment.Doctor, appointment.Prescription },
+    changes: $"Appointment updated: {appointment.Status}"
+);
 
         return (true, "Appointment updated successfully.");
     }
@@ -102,6 +123,14 @@ public class AppointmentService : IAppointmentService
         appointment.IsDeleted = true;
         _uow.Appointments.Update(appointment);
         await _uow.SaveChangesAsync();
+        await _auditService.LogAsync(
+    action: "Deleted",
+    entityName: "Appointment",
+    entityId: id,
+    oldValues: new { appointment.AppointmentDate, appointment.AppointmentTime, appointment.Status, appointment.ReasonForVisit, appointment.Notes, appointment.Fee, appointment.IsPaid, appointment.Patient, appointment.Doctor, appointment.Prescription },
+    newValues: null,
+    changes: $"Appointment deleted: {appointment.Status}");
+
 
         return (true, "Appointment deleted successfully.");
     }

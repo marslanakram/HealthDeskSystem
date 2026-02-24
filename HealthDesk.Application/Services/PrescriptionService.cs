@@ -2,6 +2,7 @@
 using HealthDesk.Application.DTOs;
 using HealthDesk.Application.Interfaces;
 using HealthDesk.Domain.Entities;
+using static HealthDesk.Domain.Constants.PermissionConstants;
 
 namespace HealthDesk.Application.Services;
 
@@ -9,11 +10,13 @@ public class PrescriptionService : IPrescriptionService
 {
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly IAuditService _auditService;
 
-    public PrescriptionService(IUnitOfWork uow, IMapper mapper)
+    public PrescriptionService(IUnitOfWork uow, IMapper mapper, IAuditService auditService)
     {
         _uow = uow;
         _mapper = mapper;
+        _auditService = auditService;
     }
 
     public async Task<IEnumerable<PrescriptionDto>> GetAllAsync()
@@ -69,6 +72,14 @@ public class PrescriptionService : IPrescriptionService
 
         await _uow.Prescriptions.AddAsync(prescription);
         await _uow.SaveChangesAsync();
+        await _auditService.LogAsync(
+    action: "Created",
+    entityName: "Prescription",
+    entityId: prescription.Id,
+    oldValues: null,
+    newValues: new { prescription.Diagnosis, prescription.Medicines, prescription.Instructions, prescription.Patient, prescription.Doctor, prescription.Appointment },
+    changes: $"New prescription registered: {prescription.Id}"
+);
 
         return (true, "Prescription created successfully.", prescription.Id);
     }
@@ -82,6 +93,14 @@ public class PrescriptionService : IPrescriptionService
         prescription.IsDeleted = true;
         _uow.Prescriptions.Update(prescription);
         await _uow.SaveChangesAsync();
+        await _auditService.LogAsync(
+    action: "Deleted",
+    entityName: "Prescription",
+    entityId: id,
+    oldValues: new { prescription.Diagnosis, prescription.Medicines, prescription.Instructions, prescription.Patient, prescription.Doctor, prescription.Appointment },
+    newValues: null,
+    changes: $"Prescription deleted: {prescription.Diagnosis}"
+);
 
         return (true, "Prescription deleted successfully.");
     }

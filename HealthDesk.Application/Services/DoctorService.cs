@@ -3,6 +3,7 @@ using HealthDesk.Application.DTOs;
 using HealthDesk.Application.Interfaces;
 using HealthDesk.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using static HealthDesk.Domain.Constants.PermissionConstants;
 
 namespace HealthDesk.Application.Services;
 
@@ -11,15 +12,18 @@ public class DoctorService : IDoctorService
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IAuditService _auditService;       
 
     public DoctorService(
         IUnitOfWork uow,
         IMapper mapper,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        IAuditService auditService)
     {
         _uow = uow;
         _mapper = mapper;
         _userManager = userManager;
+        _auditService = auditService;
     }
 
     public async Task<IEnumerable<DoctorDto>> GetAllAsync()
@@ -92,6 +96,14 @@ public class DoctorService : IDoctorService
             await _uow.Doctors.AddAsync(doctor);
             await _uow.SaveChangesAsync();
             await _uow.CommitTransactionAsync();
+            await _auditService.LogAsync(
+    action: "Created",
+    entityName: "Doctor",
+    entityId: doctor.Id,
+    oldValues: null,
+    newValues: new { doctor.FullName, doctor.PhoneNumber, doctor.Specialization, doctor.Qualification, doctor.ConsultationFee, doctor.Shift, doctor.IsAvailable, doctor.Department, doctor.Prescriptions, doctor.Appointments },
+    changes: $"New Doctor registered: {doctor.FullName}"
+);
 
             return (true, "Doctor registered successfully.", doctor.Id);
         }
@@ -107,9 +119,10 @@ public class DoctorService : IDoctorService
         var doctor = await _uow.Doctors.GetByIdAsync(dto.Id);
         if (doctor is null)
             return (false, "Doctor not found.");
+        var oldValues = new { doctor.FullName, doctor.PhoneNumber, doctor.Specialization, doctor.Qualification, doctor.ConsultationFee, doctor.Shift, doctor.IsAvailable, doctor.Department, doctor.Prescriptions, doctor.Appointments };
 
-        // Verify new department exists
-        var departmentExists = await _uow.Departments
+            // Verify new department exists
+            var departmentExists = await _uow.Departments
             .ExistsAsync(d => d.Id == dto.DepartmentId);
 
         if (!departmentExists)
@@ -118,6 +131,14 @@ public class DoctorService : IDoctorService
         _mapper.Map(dto, doctor);
         _uow.Doctors.Update(doctor);
         await _uow.SaveChangesAsync();
+        await _auditService.LogAsync(
+    action: "Updated",
+    entityName: "Doctor",
+    entityId: doctor.Id,
+    oldValues: oldValues,
+    newValues: new { doctor.FullName, doctor.PhoneNumber, doctor.Specialization, doctor.Qualification, doctor.ConsultationFee, doctor.Shift, doctor.IsAvailable, doctor.Department, doctor.Prescriptions, doctor.Appointments },
+    changes: $"Doctor profile updated: {doctor.FullName}"
+);
 
         return (true, "Doctor updated successfully.");
     }
@@ -141,7 +162,14 @@ public class DoctorService : IDoctorService
         doctor.IsDeleted = true;
         _uow.Doctors.Update(doctor);
         await _uow.SaveChangesAsync();
-
+        await _auditService.LogAsync(
+    action: "Deleted",
+    entityName: "Doctor",
+    entityId: id,
+    oldValues: new { doctor.FullName },
+    newValues: null,
+    changes: $"Doctor deleted: {doctor.FullName}"
+    );
         return (true, "Doctor deleted successfully.");
     }
 }
