@@ -16,24 +16,28 @@ public class AuditLogController : Controller
     }
 
     // ── GET: Admin/AuditLog ───────────────────────────────────────
-    public async Task<IActionResult> Index(string? action, string? entity)
+    public async Task<IActionResult> Index(string? auditAction, string? entity)
     {
         ViewData["ActiveMenu"] = "AuditLog";
         ViewData["Title"] = "Audit Log";
 
-        var logs = await _auditService.GetRecentAsync(100);
+        var logs = (await _auditService.GetRecentAsync(100)).ToList();
 
-     
+        // apply filter ONLY if valid value selected
+        var validActions = new[] { "Created", "Updated", "Deleted", "Login", "Logout", "PermissionChanged" };
+        var validEntities = new[] { "Patient", "Doctor", "Appointment", "Prescription", "User", "Role" };
 
-        // Filter by action
-        if (!string.IsNullOrWhiteSpace(action))
-            logs = logs.Where(l => l.Action == action);
+        if (!string.IsNullOrWhiteSpace(auditAction) && validActions.Contains(auditAction))
+        {
+            logs = logs.Where(l => l.Action == auditAction).ToList();
+        }
 
-        // Filter by entity
-        if (!string.IsNullOrWhiteSpace(entity))
-            logs = logs.Where(l => l.EntityName == entity);
+        if (!string.IsNullOrWhiteSpace(entity) && validEntities.Contains(entity))
+        {
+            logs = logs.Where(l => l.EntityName == entity).ToList();
+        }
 
-        ViewData["Action"] = action;
+        ViewData["Action"] = auditAction;
         ViewData["Entity"] = entity;
 
         return View(logs);

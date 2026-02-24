@@ -22,7 +22,7 @@
         <form asp-action="Index" method="get" class="row g-2 align-items-end">
             <div class="col-md-4">
                 <label class="form-label small fw-semibold">Action</label>
-                <select name="action" class="form-select form-select-sm">
+                <select name="auditAction" class="form-select form-select-sm">
                     <option value="">All Actions</option>
                     <option value="Created"
                             selected="@(ViewData["Action"]?.ToString() == "Created")">
