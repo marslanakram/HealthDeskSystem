@@ -1,32 +1,4 @@
-﻿//var builder = WebApplication.CreateBuilder(args);
-
-//// Add services to the container.
-//builder.Services.AddControllersWithViews();
-
-//var app = builder.Build();
-
-//// Configure the HTTP request pipeline.
-//if (!app.Environment.IsDevelopment())
-//{
-//    app.UseExceptionHandler("/Home/Error");
-//    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-//    app.UseHsts();
-//}
-
-//app.UseHttpsRedirection();
-//app.UseStaticFiles();
-
-//app.UseRouting();
-
-//app.UseAuthorization();
-
-//app.MapControllerRoute(
-//    name: "default",
-//    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-//app.Run();
-
-using HealthDesk.Application.Interfaces;
+﻿using HealthDesk.Application.Interfaces;
 using HealthDesk.Application.Mappings;
 using HealthDesk.Application.Services;
 using HealthDesk.Domain.Entities;
@@ -34,6 +6,7 @@ using HealthDesk.Infrastructure.Authorization;
 using HealthDesk.Infrastructure.Data;
 using HealthDesk.Infrastructure.Repositories;
 using HealthDesk.Infrastructure.Seeds;
+using HealthDesk.Infrastructure.TenantService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -51,8 +24,31 @@ builder.Host.UseSerilog((context, config) =>
 });
 
 // ── Database ─────────────────────────────────────────────────────
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+{
+    var interceptor = serviceProvider.GetRequiredService<TenantSaveChangesInterceptor>();
+
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions =>
+        {
+            sqlOptions.MigrationsAssembly("HealthDesk.Infrastructure");
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        })
+        .AddInterceptors(interceptor);  // ← Auto-set TenantId
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+});
 
 // ── Identity ─────────────────────────────────────────────────────
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -109,6 +105,8 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<TenantSaveChangesInterceptor>();
 
 // ── AutoMapper ────────────────────────────────────────────────────
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
@@ -117,9 +115,11 @@ builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    //options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromHours(2);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
@@ -129,8 +129,32 @@ var app = builder.Build();
 // ── Seed database on startup ──────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    await context.Database.MigrateAsync();
+
+    // Create default tenant if none exist
+    if (!await context.Tenants.AnyAsync())
+    {
+        var defaultTenant = new Tenant
+        {
+            Name = "Default Hospital",
+            Identifier = "default",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            SubscriptionTier = "Enterprise",
+            MaxUsers = 1000,
+            MaxPatients = 10000,
+            ContactEmail = "admin@healthdesk.com",
+            PrimaryColor = "#0d6efd"
+        };
+
+        context.Tenants.Add(defaultTenant);
+        await context.SaveChangesAsync();
+    }
+
     var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<AppDbContext>();
+    //var context = services.GetRequiredService<AppDbContext>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
@@ -150,8 +174,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseSerilogRequestLogging();
-app.UseRouting();
 app.UseSession();
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 

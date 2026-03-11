@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HealthDesk.Domain.Entities
 {
-    public class Patient : BaseEntity
+    public class Patient : TenantEntity
     {
         public string UserId { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;

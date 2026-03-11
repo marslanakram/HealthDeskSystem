@@ -8,7 +8,7 @@ using HealthDesk.Domain.Enums;
 
 namespace HealthDesk.Domain.Entities
 {
-    public class Department : BaseEntity
+    public class Department : TenantEntity
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }

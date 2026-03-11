@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HealthDesk.Domain.Entities
 {
-    public class Prescription : BaseEntity
+    public class Prescription : TenantEntity
     {
         public string Diagnosis { get; set; } = string.Empty;
         public string Medicines { get; set; } = string.Empty; // JSON or formatted string

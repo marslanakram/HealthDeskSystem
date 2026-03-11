@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HealthDesk.Domain.Entities
 {
-    public class Appointment : BaseEntity
+    public class Appointment : TenantEntity
     {
         public DateTime AppointmentDate { get; set; }
         public TimeSpan AppointmentTime { get; set; }
