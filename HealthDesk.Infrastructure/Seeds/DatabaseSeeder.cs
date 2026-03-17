@@ -11,12 +11,44 @@ public static class DatabaseSeeder
     // ── Seed all roles ────────────────────────────────────────────
     public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
     {
-        string[] roles = { "Admin", "Doctor", "Nurse", "Receptionist", "Patient" };
+        string[] roles = { "SuperAdmin", "Admin", "Doctor", "Nurse", "Receptionist", "Patient" };
 
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
                 await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+
+    public static async Task SeedSuperAdminAsync(
+    UserManager<ApplicationUser> userManager,
+    IConfiguration configuration)
+    {
+        var superAdminEmail = configuration["SeedSuperAdmin:Email"]
+            ?? "superadmin@healthdesk.com";
+        var superAdminPassword = configuration["SeedSuperAdmin:Password"]
+            ?? "Super***REMOVED***";
+
+        var superAdmin = await userManager.FindByEmailAsync(superAdminEmail);
+
+        if (superAdmin is null)
+        {
+            superAdmin = new ApplicationUser
+            {
+                UserName = superAdminEmail,
+                Email = superAdminEmail,
+                FullName = "Super Administrator",
+                EmailConfirmed = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var result = await userManager.CreateAsync(superAdmin, superAdminPassword);
+
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
+            }
         }
     }
 
