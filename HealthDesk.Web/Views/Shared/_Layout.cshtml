@@ -168,6 +168,28 @@
             <nav class="flex-grow-1 py-3">
                 <ul class="nav flex-column">
 
+                    @if (User.IsInRole("SuperAdmin"))
+                    {
+                        <!-- SuperAdmin Dashboard -->
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "SuperAdminDashboard" ? "active" : "")"
+                               asp-area="SuperAdmin" asp-controller="Dashboard" asp-action="Index">
+                                <i class="bi bi-shield-fill-check"></i> SuperAdmin Dashboard
+                            </a>
+                        </li>
+
+                        <li><div class="sidebar-section-title">Platform Management</div></li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Tenants" ? "active" : "")"
+                               asp-area="Admin" asp-controller="TenantManagement" asp-action="Index">
+                                <i class="bi bi-building"></i> Tenant Management
+                            </a>
+                        </li>
+
+                        <li><hr class="my-2 border-white border-opacity-10" /></li>
+                    }
+
                     <!-- Dashboard -->
                     <li class="nav-item">
                         <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Dashboard" ? "active" : "")"

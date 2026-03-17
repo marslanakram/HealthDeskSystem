@@ -2,7 +2,8 @@
 using HealthDesk.Domain.Entities;
 using HealthDesk.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace HealthDesk.Infrastructure.TenantService
 {
@@ -101,8 +102,22 @@ namespace HealthDesk.Infrastructure.TenantService
                 return _currentTenantId.Value;
 
             var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext?.User.IsInRole("SuperAdmin") == true)
+            {
+                // Check if they've explicitly selected a tenant
+                if (httpContext.Session.GetInt32("TenantId").HasValue)
+                {
+                    return httpContext.Session.GetInt32("TenantId")!.Value;
+                }
+
+                // Default to tenant 1 for SuperAdmin if not specified
+                return 1;
+            }
+            if (_currentTenantId.HasValue)
+                return _currentTenantId.Value;
+
             if (httpContext == null)
-                return 1; // Default tenant
+                return 1;
 
             // Try to get tenant from session
             var sessionTenant = httpContext.Session.GetInt32("TenantId");

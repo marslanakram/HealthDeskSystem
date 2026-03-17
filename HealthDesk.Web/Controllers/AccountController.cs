@@ -127,6 +127,9 @@ public class AccountController : Controller
 
     private IActionResult RedirectToDashboard()
     {
+        if (User.IsInRole("SuperAdmin"))
+            return RedirectToAction("Index", "Dashboard", new { area = "SuperAdmin" });
+
         if (User.IsInRole("Admin"))
             return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
 
