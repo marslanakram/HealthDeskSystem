@@ -193,7 +193,7 @@
                     <!-- Dashboard -->
                     <li class="nav-item">
                         <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Dashboard" ? "active" : "")"
-                           asp-controller="Dashboard" asp-action="Index">
+                           asp-area="" asp-controller="Dashboard" asp-action="Index">
                             <i class="bi bi-grid-1x2-fill"></i> Dashboard
                         </a>
                     </li>
@@ -204,14 +204,14 @@
 
                         <li class="nav-item">
                             <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Patients" ? "active" : "")"
-                               asp-controller="Patient" asp-action="Index">
+                               asp-area="" asp-controller="Patient" asp-action="Index">
                                 <i class="bi bi-people-fill"></i> Patients
                             </a>
                         </li>
 
                         <li class="nav-item">
                             <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Appointments" ? "active" : "")"
-                               asp-controller="Appointment" asp-action="Index">
+                               asp-area="" asp-controller="Appointment" asp-action="Index">
                                 <i class="bi bi-calendar-check-fill"></i> Appointments
                             </a>
                         </li>
@@ -221,14 +221,14 @@
                     {
                         <li class="nav-item">
                             <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Doctors" ? "active" : "")"
-                               asp-controller="Doctor" asp-action="Index">
+                               asp-area="" asp-controller="Doctor" asp-action="Index">
                                 <i class="bi bi-person-badge-fill"></i> Doctors
                             </a>
                         </li>
 
                         <li class="nav-item">
                             <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Departments" ? "active" : "")"
-                               asp-controller="Department" asp-action="Index">
+                               asp-area="" asp-controller="Department" asp-action="Index">
                                 <i class="bi bi-building-fill"></i> Departments
                             </a>
                         </li>
@@ -272,7 +272,7 @@
 
                         <li class="nav-item">
                             <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Prescriptions" ? "active" : "")"
-                               asp-controller="Prescription" asp-action="Index">
+                               asp-area="" asp-controller="Prescription" asp-action="Index">
                                 <i class="bi bi-file-earmark-medical-fill"></i> Prescriptions
                             </a>
                         </li>
@@ -291,7 +291,7 @@
 
                         <li class="nav-item">
                             <a class="nav-link @(ViewData["ActiveMenu"]?.ToString() == "Prescriptions" ? "active" : "")"
-                               asp-controller="Prescription" asp-action="Index">
+                               asp-area="" asp-controller="Prescription" asp-action="Index">
                                 <i class="bi bi-file-earmark-medical-fill"></i> My Prescriptions
                             </a>
                         </li>

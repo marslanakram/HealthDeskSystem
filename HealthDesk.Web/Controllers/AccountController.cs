@@ -52,9 +52,16 @@ public class AccountController : Controller
 
         var user = await _userManager.FindByEmailAsync(model.Email);
 
-        if (user is null || !user.IsActive)
+        if (user is null)
         {
             ModelState.AddModelError(string.Empty, "Invalid email or password.");
+            return View(model);
+        }
+
+        // Check if user is active
+        if (!user.IsActive)
+        {
+            ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact support.");
             return View(model);
         }
 
@@ -63,17 +70,44 @@ public class AccountController : Controller
 
         if (result.Succeeded)
         {
-            _logger.LogInformation("User {Email} logged in.", model.Email);
-            // ── Audit Log ─────────────────────────────────────────────
+            _logger.LogInformation("User {Email} logged in successfully.", user.Email);
+
+            // ── Load user claims and store TenantId in session ───────────
+            var claims = await _userManager.GetClaimsAsync(user);
+            var tenantClaim = claims.FirstOrDefault(c => c.Type == "TenantId");
+
+            if (tenantClaim != null)
+            {
+                var tenantId = int.Parse(tenantClaim.Value);
+                HttpContext.Session.SetInt32("TenantId", tenantId);
+
+                _logger.LogInformation("User {Email} logged in to Tenant {TenantId}",
+                    user.Email, tenantId);
+
+                Console.WriteLine($"[Login] ✅ User {user.Email} logged in with TenantId: {tenantId}");
+            }
+            else
+            {
+                _logger.LogWarning("User {Email} has no TenantId claim!", user.Email);
+                Console.WriteLine($"[Login] ❌ WARNING: User {user.Email} has NO TenantId claim!");
+            }
+
+            // Audit log
             await _auditService.LogAsync(
-                action: "Login",
-                entityName: "User",
-                entityId: null,
-                oldValues: null,
-                newValues: null,
-                changes: $"User logged in: {model.Email}"
-            );
-            return RedirectToLocal(returnUrl);
+                "Login",
+                "User",
+                null,
+                null,
+                new { Email = user.Email },
+                $"User {user.Email} logged in successfully");
+
+            // Redirect
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToDashboard();
         }
 
         if (result.IsLockedOut)
@@ -131,7 +165,7 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Dashboard", new { area = "SuperAdmin" });
 
         if (User.IsInRole("Admin"))
-            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+            return RedirectToAction("Index", "Dashboard", new { area = "" });
 
         if (User.IsInRole("Doctor"))
             return RedirectToAction("Index", "Dashboard");

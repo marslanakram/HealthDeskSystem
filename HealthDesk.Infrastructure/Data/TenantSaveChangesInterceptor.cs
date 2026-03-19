@@ -90,26 +90,42 @@ public class TenantSaveChangesInterceptor : SaveChangesInterceptor
         // During seeding or migration, there's no HTTP context - use tenant 1
         int tenantId = 1;
 
-        if (httpContext != null)
+        if (httpContext != null && httpContext.User.Identity?.IsAuthenticated == true)
         {
-            // Try to get from session
-            var sessionTenant = httpContext.Session.GetInt32("TenantId");
-            if (sessionTenant.HasValue)
+            // ── Priority 1: Read from Claims (loaded by CustomUserClaimsPrincipalFactory) ─
+            var tenantClaim = httpContext.User.FindFirst("TenantId");
+            if (tenantClaim != null)
             {
-                tenantId = sessionTenant.Value;
+                tenantId = int.Parse(tenantClaim.Value);
+                Console.WriteLine($"[Interceptor] ✅ Found TenantId in claims: {tenantId} for user {httpContext.User.Identity.Name}");
             }
-            else if (httpContext.User.IsInRole("SuperAdmin"))
+            else
             {
-                // SuperAdmin defaults to tenant 1
-                tenantId = 1;
+                // ── Priority 2: Read from Session (set during login) ─────────
+                var sessionTenant = httpContext.Session.GetInt32("TenantId");
+                if (sessionTenant.HasValue)
+                {
+                    tenantId = sessionTenant.Value;
+                    Console.WriteLine($"[Interceptor] ✅ Found TenantId in session: {tenantId}");
+                }
+                else
+                {
+                    Console.WriteLine($"[Interceptor] ⚠️ No TenantId claim or session found for user {httpContext.User.Identity.Name}, using default: {tenantId}");
+                }
             }
         }
+        else
+        {
+            Console.WriteLine($"[Interceptor] No authenticated user (seeding/migration mode), using default TenantId: {tenantId}");
+        }
 
+        // Apply TenantId to new entities
         foreach (var entry in context.ChangeTracker.Entries<TenantEntity>())
         {
             if (entry.State == EntityState.Added && entry.Entity.TenantId == 0)
             {
                 entry.Entity.TenantId = tenantId;
+                Console.WriteLine($"[Interceptor] ✅ Set TenantId={tenantId} on {entry.Entity.GetType().Name} (Id will be assigned after save)");
             }
         }
     }

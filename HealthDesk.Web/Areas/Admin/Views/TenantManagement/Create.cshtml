@@ -1,4 +1,5 @@
-﻿@{
+﻿@model HealthDesk.Web.Areas.Admin.Controllers.CreateTenantViewModel
+@{
     ViewData["Title"] = "Create Tenant";
     ViewData["ActiveMenu"] = "Tenants";
 }
@@ -7,9 +8,9 @@
     <div>
         <h4 class="fw-bold mb-1">
             <i class="bi bi-plus-circle text-primary me-2"></i>
-            Create New Tenant
+            Create New Tenant & Admin User
         </h4>
-        <p class="text-muted mb-0">Add a new hospital to the system</p>
+        <p class="text-muted mb-0">Set up a new hospital with admin access</p>
     </div>
     <a asp-action="Index" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i> Back
@@ -17,37 +18,126 @@
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-lg-6">
+    <div class="col-lg-8">
         <div class="card">
             <div class="card-body p-4">
                 <form asp-action="Create" method="post">
                     @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <!-- Hospital Information -->
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-hospital me-2"></i>Hospital Information
+                    </h6>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">
+                        <label asp-for="Name" class="form-label fw-semibold">
                             Hospital Name <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="name" class="form-control"
-                               placeholder="e.g., City General Hospital" required />
+                        <input asp-for="Name" class="form-control"
+                               placeholder="e.g., City General Hospital" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">
-                            Identifier <span class="text-danger">*</span>
+                        <label asp-for="Identifier" class="form-label fw-semibold">
+                            Identifier (Subdomain) <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="identifier" class="form-control"
-                               placeholder="e.g., city-general" required />
+                        <div class="input-group">
+                            <input asp-for="Identifier" class="form-control"
+                                   placeholder="city-general"
+                                   style="text-transform:lowercase;" />
+                            <span class="input-group-text">.healthdesk.com</span>
+                        </div>
+                        <span asp-validation-for="Identifier" class="text-danger small"></span>
                         <small class="form-text text-muted">
-                            Lowercase letters, numbers, and hyphens only
+                            Lowercase letters, numbers, and hyphens only. This will be the client's URL.
                         </small>
                     </div>
+
+                    <hr class="my-4" />
+
+                    <!-- Admin User Information -->
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-person-badge me-2"></i>Admin User (for Client)
+                    </h6>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        This admin user will be sent to the client to access their hospital.
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AdminFullName" class="form-label fw-semibold">
+                            Admin Full Name <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="AdminFullName" class="form-control"
+                               placeholder="Dr. Sarah Johnson" />
+                        <span asp-validation-for="AdminFullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AdminEmail" class="form-label fw-semibold">
+                            Admin Email <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="AdminEmail" class="form-control" type="email"
+                               placeholder="admin@citygeneral.com" />
+                        <span asp-validation-for="AdminEmail" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="AdminPassword" class="form-label fw-semibold">
+                            Admin Password <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="AdminPassword" class="form-control" type="password"
+                               placeholder="Minimum 6 characters" />
+                        <span asp-validation-for="AdminPassword" class="text-danger small"></span>
+                        <small class="form-text text-muted">
+                            Must contain uppercase, lowercase, digit, and special character.
+                            <strong>You will send this to the client.</strong>
+                        </small>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <!-- Subscription Settings -->
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-gear me-2"></i>Subscription Settings (Optional)
+                    </h6>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="SubscriptionTier" class="form-label fw-semibold">
+                                Tier
+                            </label>
+                            <select asp-for="SubscriptionTier" class="form-select">
+                                <option value="Basic">Basic</option>
+                                <option value="Pro">Pro</option>
+                                <option value="Enterprise">Enterprise</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="MaxUsers" class="form-label fw-semibold">
+                                Max Users
+                            </label>
+                            <input asp-for="MaxUsers" class="form-control" type="number" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="MaxPatients" class="form-label fw-semibold">
+                                Max Patients
+                            </label>
+                            <input asp-for="MaxPatients" class="form-control" type="number" />
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
 
                     <div class="d-flex gap-2 justify-content-end">
                         <a asp-action="Index" class="btn btn-outline-secondary px-4">
                             Cancel
                         </a>
                         <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-check-lg me-1"></i>Create Tenant
+                            <i class="bi bi-check-lg me-1"></i>Create Tenant & Admin User
                         </button>
                     </div>
                 </form>
@@ -55,3 +145,9 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
