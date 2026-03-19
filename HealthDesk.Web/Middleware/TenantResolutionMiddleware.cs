@@ -1,6 +1,6 @@
 ﻿using HealthDesk.Application.Interfaces;
 using HealthDesk.Infrastructure.Data;
-using HealthDesk.Infrastructure.TenantService;
+using HealthDesk.Infrastructure.TenantServices;
 
 namespace HealthDesk.Web.Middleware;
 

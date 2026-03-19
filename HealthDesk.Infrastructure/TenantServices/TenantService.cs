@@ -4,7 +4,7 @@ using HealthDesk.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
-namespace HealthDesk.Infrastructure.TenantService;
+namespace HealthDesk.Infrastructure.TenantServices;
 
 public class TenantService : ITenantService
 {
