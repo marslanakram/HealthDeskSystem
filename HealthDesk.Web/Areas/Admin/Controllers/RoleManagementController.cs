@@ -16,6 +16,9 @@ public class RoleManagementController : Controller
     private readonly ILogger<RoleManagementController> _logger;
     private readonly IAuditService _auditService;
 
+    // These roles belong to the platform level — never shown or editable in tenant panel
+    private static readonly string[] PlatformRoles = { "SuperAdmin" };
+
     public RoleManagementController(
         RoleManager<IdentityRole> roleManager,
         ILogger<RoleManagementController> logger,
@@ -32,7 +35,11 @@ public class RoleManagementController : Controller
         ViewData["ActiveMenu"] = "Roles";
         ViewData["Title"] = "Role Management";
 
-        var roles = await _roleManager.Roles.ToListAsync();
+        // Never expose platform-level roles in the tenant admin panel
+        var roles = await _roleManager.Roles
+            .Where(r => !PlatformRoles.Contains(r.Name))
+            .ToListAsync();
+
         return View(roles);
     }
 
@@ -43,9 +50,11 @@ public class RoleManagementController : Controller
         ViewData["Title"] = "Manage Permissions";
 
         var role = await _roleManager.FindByIdAsync(id);
-        if (role is null)
+
+        // Block editing platform-level roles entirely
+        if (role is null || PlatformRoles.Contains(role.Name))
         {
-            TempData["Error"] = "Role not found.";
+            TempData["Error"] = "Role not found or cannot be edited from this panel.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -68,15 +77,17 @@ public class RoleManagementController : Controller
         return View(model);
     }
 
-    // ── POST: Admin/RoleManagement/Permissions ────────────────────
+    // ── POST: Admin/RoleManagement/UpdatePermissions ──────────────
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePermissions(RolePermissionsViewModel model)
     {
         var role = await _roleManager.FindByIdAsync(model.RoleId);
-        if (role is null)
+
+        // Double-check: block platform-level roles even via direct POST
+        if (role is null || PlatformRoles.Contains(role.Name))
         {
-            TempData["Error"] = "Role not found.";
+            TempData["Error"] = "Role not found or cannot be edited from this panel.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -84,14 +95,12 @@ public class RoleManagementController : Controller
         var existingClaims = await _roleManager.GetClaimsAsync(role);
 
         var oldPermissions = existingClaims
-        .Where(c => c.Type == "Permission")
-        .Select(c => c.Value)
-        .ToList();
+            .Where(c => c.Type == "Permission")
+            .Select(c => c.Value)
+            .ToList();
 
         foreach (var claim in existingClaims.Where(c => c.Type == "Permission"))
-        {
             await _roleManager.RemoveClaimAsync(role, claim);
-        }
 
         // Add new permissions
         if (model.SelectedPermissions is not null)
@@ -103,7 +112,7 @@ public class RoleManagementController : Controller
             }
         }
 
-        // ── Audit Log ─────────────────────────────────────────────────
+        // ── Audit Log ─────────────────────────────────────────────
         await _auditService.LogAsync(
             action: "PermissionChanged",
             entityName: "Role",
@@ -118,7 +127,7 @@ public class RoleManagementController : Controller
     }
 }
 
-// ViewModel
+// ── ViewModel ────────────────────────────────────────────────────
 public class RolePermissionsViewModel
 {
     public string RoleId { get; set; } = string.Empty;
