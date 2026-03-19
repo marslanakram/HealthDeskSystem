@@ -200,6 +200,8 @@ using HealthDesk.Infrastructure.Data;
 using HealthDesk.Infrastructure.Repositories;
 using HealthDesk.Infrastructure.Seeds;
 using HealthDesk.Infrastructure.TenantService;
+using HealthDesk.Web.Identity;
+using HealthDesk.Web.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -265,7 +267,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+.AddClaimsPrincipalFactory<CustomUserClaimsPrincipalFactory>();
 
 // ── Authorization Policies ────────────────────────────────────
 builder.Services.AddAuthorization(options =>
@@ -331,8 +334,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
-app.UseSession();  // Must be BEFORE Authentication
+app.UseSession();
+app.UseTenantResolution();
 app.UseAuthentication();
 app.UseAuthorization();
 
