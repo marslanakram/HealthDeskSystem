@@ -3,6 +3,7 @@ using HealthDesk.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace HealthDesk.Web.Areas.Admin.Controllers;
@@ -34,7 +35,7 @@ public class TenantManagementController : Controller
         var tenants = await _tenantService.GetAllTenantsAsync();
         var currentTenant = _tenantService.GetCurrentTenant();
 
-        ViewBag.CurrentTenantId = currentTenant?.Id ?? 1;
+        ViewBag.CurrentTenantId = currentTenant?.Id ?? 0;
 
         return View(tenants);
     }
@@ -71,7 +72,7 @@ public class TenantManagementController : Controller
                 return View(model);
             }
 
-            // ── Step 2: Create Admin User for This Tenant ─────────
+            // ── Step 2: Create Admin User scoped to this Tenant ───
             var adminUser = new ApplicationUser
             {
                 UserName = model.AdminEmail,
@@ -79,6 +80,7 @@ public class TenantManagementController : Controller
                 FullName = model.AdminFullName,
                 EmailConfirmed = true,
                 IsActive = true,
+                TenantId = tenantId,    // ← Scoped to the new tenant
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -86,17 +88,18 @@ public class TenantManagementController : Controller
 
             if (!userResult.Succeeded)
             {
-                // If user creation fails, we should ideally rollback tenant creation
-                // For now, show error
                 var errors = string.Join(", ", userResult.Errors.Select(e => e.Description));
-                ModelState.AddModelError(string.Empty, $"Tenant created but admin user failed: {errors}");
+                ModelState.AddModelError(string.Empty,
+                    $"Tenant created but admin user failed: {errors}");
                 return View(model);
             }
 
-            // ── Step 3: Assign Admin Role ─────────────────────────
+            // ── Step 3: Assign Admin Role (tenant-level role only) ─
             await _userManager.AddToRoleAsync(adminUser, "Admin");
 
             // ── Step 4: Assign TenantId Claim ─────────────────────
+            // This claim is loaded by CustomUserClaimsPrincipalFactory at login
+            // and used by TenantResolutionMiddleware to set the correct DB filter
             await _userManager.AddClaimAsync(adminUser,
                 new Claim("TenantId", tenantId.ToString()));
 
@@ -127,11 +130,22 @@ public class TenantManagementController : Controller
     }
 
     // ── POST: Admin/TenantManagement/SwitchTenant ─────────────────
+    // Allows SuperAdmin to impersonate a tenant context (see their data)
     [HttpPost]
     public IActionResult SwitchTenant(int tenantId)
     {
         _tenantService.SetCurrentTenant(tenantId);
         TempData["Success"] = "Switched tenant successfully!";
         return RedirectToAction("Index", "Dashboard", new { area = "" });
+    }
+
+    // ── POST: Admin/TenantManagement/ClearTenantContext ───────────
+    // Allows SuperAdmin to go back to "see all" mode
+    [HttpPost]
+    public IActionResult ClearTenantContext()
+    {
+        HttpContext.Session.Remove("TenantId");
+        TempData["Success"] = "Returned to platform-wide view.";
+        return RedirectToAction("Index", "Dashboard", new { area = "SuperAdmin" });
     }
 }

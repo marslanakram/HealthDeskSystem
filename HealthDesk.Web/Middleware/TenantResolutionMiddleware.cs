@@ -1,5 +1,6 @@
 ﻿using HealthDesk.Application.Interfaces;
 using HealthDesk.Infrastructure.Data;
+using HealthDesk.Infrastructure.TenantService;
 
 namespace HealthDesk.Web.Middleware;
 
@@ -17,19 +18,24 @@ public class TenantResolutionMiddleware
         ITenantService tenantService,
         AppDbContext dbContext)
     {
-        // Get current tenant ID from TenantService
-        var tenantId = tenantService.GetCurrentTenantId();
+        // Cast to concrete type to access ResolveCurrentTenantId()
+        // which returns null for SuperAdmin (no filter) vs 0 for unresolved (safe filter)
+        var resolvedTenantId = tenantService is TenantService ts
+            ? ts.ResolveCurrentTenantId()
+            : (int?)tenantService.GetCurrentTenantId();
 
-        // Set it on the DbContext for this request
-        dbContext.SetCurrentTenant(tenantId);
+        // Set on DbContext — null means SuperAdmin sees all, 0 means no data (safe default)
+        dbContext.SetCurrentTenant(resolvedTenantId);
 
-        Console.WriteLine($"[TenantMiddleware] Request from Tenant: {tenantId} | Path: {context.Request.Path}");
+        Console.WriteLine(
+            resolvedTenantId == null
+                ? $"[TenantMiddleware] SuperAdmin mode — no tenant filter | Path: {context.Request.Path}"
+                : $"[TenantMiddleware] TenantId: {resolvedTenantId} | Path: {context.Request.Path}");
 
         await _next(context);
     }
 }
 
-// Extension method to register the middleware
 public static class TenantResolutionMiddlewareExtensions
 {
     public static IApplicationBuilder UseTenantResolution(

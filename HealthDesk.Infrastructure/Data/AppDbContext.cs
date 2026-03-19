@@ -262,6 +262,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<ApplicationUser>().ToTable("Users");
         builder.HasDefaultSchema("dbo");
 
+        // ── ApplicationUser Configuration ─────────────────────────
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(u => u.TenantId).HasDefaultValue(0);
+            entity.HasIndex(u => u.TenantId);
+        });
+
         // ── Tenant Configuration ──────────────────────────────────
         builder.Entity<Tenant>(entity =>
         {
@@ -277,9 +284,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(d => d.Id);
             entity.Property(d => d.Name).IsRequired().HasMaxLength(100);
             entity.Property(d => d.Description).HasMaxLength(500);
-
-            // Soft delete only (tenant filter applied at runtime)
-            entity.HasQueryFilter(d => !d.IsDeleted);
         });
 
         // ── Doctor Configuration ──────────────────────────────────
@@ -299,8 +303,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                 .WithOne(u => u.Doctor)
                 .HasForeignKey<Doctor>(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasQueryFilter(d => !d.IsDeleted);
         });
 
         // ── Patient Configuration ─────────────────────────────────
@@ -315,8 +317,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                 .WithOne(u => u.Patient)
                 .HasForeignKey<Patient>(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasQueryFilter(p => !p.IsDeleted);
         });
 
         // ── Appointment Configuration ─────────────────────────────
@@ -336,8 +336,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(d => d.Appointments)
                 .HasForeignKey(a => a.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasQueryFilter(a => !a.IsDeleted);
         });
 
         // ── Prescription Configuration ────────────────────────────
@@ -362,8 +360,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(d => d.Prescriptions)
                 .HasForeignKey(p => p.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasQueryFilter(p => !p.IsDeleted);
         });
 
         // ── AuditLog Configuration ────────────────────────────────
@@ -375,11 +371,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(a => a.UserName).HasMaxLength(150);
             entity.Property(a => a.IpAddress).HasMaxLength(45);
         });
+
         // ══════════════════════════════════════════════════════════
         // DYNAMIC TENANT QUERY FILTERS (Applied at Runtime)
         // ══════════════════════════════════════════════════════════
-
-        // Apply tenant filters with soft delete
         builder.Entity<Department>().HasQueryFilter(CreateTenantFilter<Department>());
         builder.Entity<Doctor>().HasQueryFilter(CreateTenantFilter<Doctor>());
         builder.Entity<Patient>().HasQueryFilter(CreateTenantFilter<Patient>());
@@ -393,8 +388,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
     private Expression<Func<T, bool>> CreateTenantFilter<T>() where T : TenantEntity
     {
-        // This creates a filter: entity => !entity.IsDeleted && entity.TenantId == GetTenantId()
-        return entity => !entity.IsDeleted && entity.TenantId == GetTenantId();
+        // If _currentTenantId is null (SuperAdmin, no tenant selected)
+        // → skip tenant filter so SuperAdmin can see all data
+        // If _currentTenantId is set → strictly filter to that tenant only
+        return entity => !entity.IsDeleted &&
+            (_currentTenantId == null || entity.TenantId == _currentTenantId.Value);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -402,25 +400,19 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     // ══════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Gets the current tenant ID for query filtering.
-    /// During migrations, returns 0 to disable filtering.
+    /// Sets the current tenant context for this DbContext instance.
+    /// Pass null to disable tenant filtering (SuperAdmin mode).
+    /// Must be called before querying to enable tenant filtering.
     /// </summary>
-    private int GetTenantId()
+    public void SetCurrentTenant(int? tenantId)
     {
-        // During migrations or when no tenant is set, return 0
-        // This disables the filter since no entity has TenantId = 0
-        return _currentTenantId ?? 0;
+        _currentTenantId = tenantId;
     }
 
     /// <summary>
-    /// Sets the current tenant context for this DbContext instance.
-    /// Must be called before querying to enable tenant filtering.
+    /// Returns the current tenant ID. Null means no filter (SuperAdmin).
     /// </summary>
-    public void SetCurrentTenant(int tenantId)
-    {
-        _currentTenantId = tenantId;
-        Console.WriteLine($"[AppDbContext] Current tenant set to: {tenantId}");
-    }
+    public int? GetCurrentTenantId() => _currentTenantId;
 
     // ══════════════════════════════════════════════════════════════
     // AUTO-SET TIMESTAMPS ON SAVE
