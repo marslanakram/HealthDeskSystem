@@ -15,15 +15,18 @@ public class TenantManagementController : Controller
     private readonly ITenantService _tenantService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IAuditService _auditService;
+    private readonly ITenantPermissionService _permissionService;
 
     public TenantManagementController(
         ITenantService tenantService,
         UserManager<ApplicationUser> userManager,
-        IAuditService auditService)
+        IAuditService auditService,
+        ITenantPermissionService permissionService)
     {
         _tenantService = tenantService;
         _userManager = userManager;
         _auditService = auditService;
+        _permissionService = permissionService;
     }
 
     // ── GET: Admin/TenantManagement ───────────────────────────────
@@ -102,6 +105,8 @@ public class TenantManagementController : Controller
             // and used by TenantResolutionMiddleware to set the correct DB filter
             await _userManager.AddClaimAsync(adminUser,
                 new Claim("TenantId", tenantId.ToString()));
+
+            await _permissionService.SeedDefaultPermissionsAsync(tenantId);
 
             // ── Step 5: Audit Log ──────────────────────────────────
             await _auditService.LogAsync(

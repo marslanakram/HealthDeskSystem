@@ -253,6 +253,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Prescription> Prescriptions => Set<Prescription>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<TenantRolePermission> TenantRolePermissions => Set<TenantRolePermission>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -370,6 +371,19 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(a => a.EntityName).HasMaxLength(100);
             entity.Property(a => a.UserName).HasMaxLength(150);
             entity.Property(a => a.IpAddress).HasMaxLength(45);
+        });
+
+        builder.Entity<TenantRolePermission>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.HasIndex(t => new { t.TenantId, t.RoleName, t.Permission }).IsUnique();
+            entity.Property(t => t.RoleName).IsRequired().HasMaxLength(50);
+            entity.Property(t => t.Permission).IsRequired().HasMaxLength(200);
+
+            entity.HasOne(t => t.Tenant)
+                .WithMany()
+                .HasForeignKey(t => t.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // ══════════════════════════════════════════════════════════
