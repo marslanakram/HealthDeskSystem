@@ -1,5 +1,6 @@
 ﻿using HealthDesk.Application.Interfaces;
 using HealthDesk.Infrastructure.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace HealthDesk.Infrastructure.Repositories;
@@ -7,6 +8,7 @@ namespace HealthDesk.Infrastructure.Repositories;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _context;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private IDbContextTransaction? _transaction;
 
     // ── Lazy-loaded repositories ──────────────────────────────────
@@ -17,9 +19,12 @@ public class UnitOfWork : IUnitOfWork
     private IDepartmentRepository? _departments;
     private IAuditLogRepository? _auditLogs;
 
-    public UnitOfWork(AppDbContext context)
+    public UnitOfWork(AppDbContext context,
+        IHttpContextAccessor httpContextAccessor
+        )
     {
         _context = context;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public IPatientRepository Patients
@@ -38,7 +43,7 @@ public class UnitOfWork : IUnitOfWork
         => _departments ??= new DepartmentRepository(_context);
 
     public IAuditLogRepository AuditLogs
-        => _auditLogs ??= new AuditLogRepository(_context);
+        => _auditLogs ??= new AuditLogRepository(_context, _httpContextAccessor);
 
     // ── Save & Transaction ────────────────────────────────────────
     public async Task<int> SaveChangesAsync()

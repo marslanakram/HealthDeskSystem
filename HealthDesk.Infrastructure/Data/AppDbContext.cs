@@ -394,6 +394,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Patient>().HasQueryFilter(CreateTenantFilter<Patient>());
         builder.Entity<Appointment>().HasQueryFilter(CreateTenantFilter<Appointment>());
         builder.Entity<Prescription>().HasQueryFilter(CreateTenantFilter<Prescription>());
+        builder.Entity<AuditLog>().HasQueryFilter(CreateAuditLogTenantFilter());
+
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -407,6 +409,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         // If _currentTenantId is set → strictly filter to that tenant only
         return entity => !entity.IsDeleted &&
             (_currentTenantId == null || entity.TenantId == _currentTenantId.Value);
+    }
+
+    private Expression<Func<AuditLog, bool>> CreateAuditLogTenantFilter()
+    {
+        return log => !log.IsDeleted &&
+            (_currentTenantId == null || log.TenantId == _currentTenantId);
     }
 
     // ══════════════════════════════════════════════════════════════
