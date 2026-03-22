@@ -10,6 +10,15 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 {
     public AppointmentRepository(AppDbContext context) : base(context) { }
 
+
+    public override async Task<IEnumerable<Appointment>> GetAllAsync()
+    {
+        return await _dbSet
+            .Include(a => a.Patient)
+            .Include(a => a.Doctor)
+                .ThenInclude(d => d.Department)
+            .ToListAsync();
+    }
     public async Task<Appointment?> GetWithDetailsAsync(int appointmentId)
         => await _dbSet
             .Include(a => a.Patient)

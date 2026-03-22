@@ -13,4 +13,10 @@ public interface IUnitOfWork : IDisposable
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
     Task RollbackTransactionAsync();
+
+    // ── New method — wraps work in execution strategy + transaction ─
+    // Application services call this instead of managing
+    // transactions directly. Keeps AppDbContext in Infrastructure.
+    Task ExecuteInTransactionAsync(Func<Task> work);
+
 }

@@ -97,8 +97,9 @@
                             <tr>
                                 <td>
                                     <div class="fw-semibold">
-                                        @appt.AppointmentDate
-                                        .
+                                        @(appt.AppointmentDate
+                                            .ToString("dd MMM yyyy"))
+
                                     </div>
                                     <small class="text-muted">
                                         <i class="bi bi-clock me-1"></i>
