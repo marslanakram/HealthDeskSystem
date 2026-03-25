@@ -14,6 +14,8 @@ public class DoctorRepository : GenericRepository<Doctor>, IDoctorRepository
 
     public async Task<Doctor?> GetWithAppointmentsAsync(int doctorId)
         => await _dbSet
+            .Include(d => d.Department)          
+            .Include(d => d.User)
             .Include(d => d.Appointments)
                 .ThenInclude(a => a.Patient)
             .FirstOrDefaultAsync(d => d.Id == doctorId);

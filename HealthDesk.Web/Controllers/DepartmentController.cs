@@ -1,5 +1,6 @@
 ﻿using HealthDesk.Application.DTOs;
 using HealthDesk.Application.Interfaces;
+using HealthDesk.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,13 +11,16 @@ public class DepartmentController : Controller
 {
     private readonly IDepartmentService _departmentService;
     private readonly ILogger<DepartmentController> _logger;
+    private readonly IDoctorService _doctorService;
 
     public DepartmentController(
         IDepartmentService departmentService,
-        ILogger<DepartmentController> logger)
+        ILogger<DepartmentController> logger,
+        IDoctorService doctorService)
     {
         _departmentService = departmentService;
         _logger = logger;
+        _doctorService = doctorService;
     }
 
     // ── GET: /Department ─────────────────────────────────────────
@@ -144,5 +148,12 @@ public class DepartmentController : Controller
             TempData["Error"] = message;
 
         return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> GetDoctors(int departmentId)
+    {
+        var doctors = await _doctorService.GetByDepartmentAsync(departmentId);
+
+        return PartialView("_DoctorsListPartial", doctors);
     }
 }
