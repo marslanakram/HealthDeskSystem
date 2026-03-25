@@ -153,6 +153,7 @@ using HealthDesk.Application.DTOs;
 using HealthDesk.Application.Interfaces;
 using HealthDesk.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace HealthDesk.Application.Services;
 
@@ -162,17 +163,20 @@ public class PatientService : IPatientService
     private readonly IMapper _mapper;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IAuditService _auditService;
+    private readonly ITenantService _tenantService; // ← inject this
 
     public PatientService(
         IUnitOfWork uow,
         IMapper mapper,
         UserManager<ApplicationUser> userManager,
-        IAuditService auditService)
+        IAuditService auditService,
+        ITenantService tenantService) // ← add this
     {
         _uow = uow;
         _mapper = mapper;
         _userManager = userManager;
         _auditService = auditService;
+        _tenantService = tenantService;
     }
 
     public async Task<IEnumerable<PatientDto>> GetAllAsync()
@@ -205,6 +209,11 @@ public class PatientService : IPatientService
         if (await _userManager.FindByEmailAsync(dto.Email) is not null)
             return (false, "A user with this email already exists.", 0);
 
+        // ── Get current tenant BEFORE entering transaction ────────
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (tenantId == 0)
+            return (false, "Tenant context could not be resolved.", 0);
+
         var patientId = 0;
 
         try
@@ -217,7 +226,8 @@ public class PatientService : IPatientService
                     Email = dto.Email,
                     FullName = dto.FullName,
                     EmailConfirmed = true,
-                    IsActive = true
+                    IsActive = true,
+                    TenantId = tenantId  // ← stamp on user row
                 };
 
                 var result = await _userManager.CreateAsync(user, dto.Password);
@@ -228,6 +238,10 @@ public class PatientService : IPatientService
                 }
 
                 await _userManager.AddToRoleAsync(user, "Patient");
+
+                // ── Stamp TenantId claim — this is what was missing ──
+                await _userManager.AddClaimAsync(user,
+                    new Claim("TenantId", tenantId.ToString()));
 
                 var patient = _mapper.Map<Patient>(dto);
                 patient.UserId = user.Id;

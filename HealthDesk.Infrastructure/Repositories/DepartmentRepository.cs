@@ -11,6 +11,7 @@ public class DepartmentRepository : GenericRepository<Department>, IDepartmentRe
 
     public async Task<IEnumerable<Department>> GetAllActiveAsync()
         => await _dbSet
+            .Include(d => d.Doctors)
             .Where(d => d.IsActive)
             .OrderBy(d => d.Name)
             .ToListAsync();

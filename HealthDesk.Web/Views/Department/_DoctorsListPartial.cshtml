@@ -1,0 +1,26 @@
+﻿@using HealthDesk.Application.DTOs
+@model IEnumerable<DoctorDto>
+
+<table class="table table-hover mb-0">
+    <thead>
+        <tr>
+           @*  <th>#</th> *@
+            <th>Name</th>
+            <th>Email</th>
+            <th>Qualification</th>
+            <th>Phone</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var doc in Model)
+        {
+            <tr>
+                @* <td>@doc.Id</td> *@
+                <td>@doc.FullName</td>
+                <td>@doc.Email</td>
+                <td>@doc.Qualification</td>
+                <td>@doc.PhoneNumber</td>
+            </tr>
+        }
+    </tbody>
+</table>

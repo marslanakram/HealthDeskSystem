@@ -533,10 +533,8 @@ else
                                     <td>
                                         @if (appt.Fee.HasValue)
                                         {
-                                            <span class="text-success
-                                                                         fw-semibold">
-                                                $@appt.Fee.Value
-                                                .ToString("F2")
+                                            <span class="text-success fw-semibold">
+                                                $@appt.Fee.Value.ToString("F2")
                                             </span>
                                         }
                                         else

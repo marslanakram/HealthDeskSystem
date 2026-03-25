@@ -180,6 +180,7 @@ using HealthDesk.Application.DTOs;
 using HealthDesk.Application.Interfaces;
 using HealthDesk.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace HealthDesk.Application.Services;
 
@@ -189,17 +190,20 @@ public class DoctorService : IDoctorService
     private readonly IMapper _mapper;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IAuditService _auditService;
+    private readonly ITenantService _tenantService; // ← inject this
 
     public DoctorService(
         IUnitOfWork uow,
         IMapper mapper,
         UserManager<ApplicationUser> userManager,
-        IAuditService auditService)
+        IAuditService auditService,
+        ITenantService tenantService) // ← add this
     {
         _uow = uow;
         _mapper = mapper;
         _userManager = userManager;
         _auditService = auditService;
+        _tenantService = tenantService;
     }
 
     public async Task<IEnumerable<DoctorDto>> GetAllAsync()
@@ -235,7 +239,6 @@ public class DoctorService : IDoctorService
     public async Task<(bool Success, string Message, int DoctorId)> CreateAsync(
         CreateDoctorDto dto)
     {
-        // Check before transaction — no point opening one if these fail
         if (await _userManager.FindByEmailAsync(dto.Email) is not null)
             return (false, "A user with this email already exists.", 0);
 
@@ -245,14 +248,15 @@ public class DoctorService : IDoctorService
         if (!departmentExists)
             return (false, "Selected department does not exist.", 0);
 
-        // Capture results from inside the lambda
+        // ── Get current tenant BEFORE entering transaction ────────
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (tenantId == 0)
+            return (false, "Tenant context could not be resolved.", 0);
+
         var doctorId = 0;
-        string? errorMessage = null;
 
         try
         {
-            // ── ExecuteInTransactionAsync handles strategy + transaction
-            // AppDbContext never referenced here
             await _uow.ExecuteInTransactionAsync(async () =>
             {
                 var user = new ApplicationUser
@@ -261,20 +265,26 @@ public class DoctorService : IDoctorService
                     Email = dto.Email,
                     FullName = dto.FullName,
                     EmailConfirmed = true,
-                    IsActive = true
+                    IsActive = true,
+                    TenantId = tenantId  // ← stamp on user row
                 };
 
                 var result = await _userManager.CreateAsync(user, dto.Password);
                 if (!result.Succeeded)
                 {
-                    errorMessage = string.Join(", ",
-                        result.Errors.Select(e => e.Description));
-                    // Throw to trigger rollback inside ExecuteInTransactionAsync
-                    throw new InvalidOperationException(errorMessage);
+                    throw new InvalidOperationException(
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
 
                 await _userManager.AddToRoleAsync(user, "Doctor");
 
+                // ── Stamp TenantId claim — this is what was missing ──
+                // Without this, doctor login has no TenantId in cookie
+                // and the tenant filter returns 0 → no data visible
+                await _userManager.AddClaimAsync(user,
+                    new Claim("TenantId", tenantId.ToString()));
+
+                // Create doctor profile
                 var doctor = _mapper.Map<Doctor>(dto);
                 doctor.UserId = user.Id;
 
@@ -286,7 +296,6 @@ public class DoctorService : IDoctorService
         }
         catch (InvalidOperationException ex)
         {
-            // Validation error thrown inside lambda
             return (false, ex.Message, 0);
         }
         catch (Exception ex)
@@ -294,7 +303,6 @@ public class DoctorService : IDoctorService
             return (false, $"An error occurred: {ex.Message}", 0);
         }
 
-        // Audit log outside transaction — non-critical
         await _auditService.LogAsync(
             action: "Created",
             entityName: "Doctor",

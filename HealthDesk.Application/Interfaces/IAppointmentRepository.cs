@@ -11,5 +11,6 @@ public interface IAppointmentRepository : IGenericRepository<Appointment>
     Task<IEnumerable<Appointment>> GetByDateAsync(DateTime date);
     Task<IEnumerable<Appointment>> GetByStatusAsync(AppointmentStatus status);
     Task<IEnumerable<Appointment>> GetTodaysAppointmentsAsync();
+    Task<IEnumerable<Appointment>> GetRecentAppointmentsAsync(DateTime fromDate);
     Task<bool> HasConflictAsync(int doctorId, DateTime date, TimeSpan time, int? excludeId = null);
 }

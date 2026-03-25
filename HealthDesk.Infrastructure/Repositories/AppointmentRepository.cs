@@ -67,6 +67,18 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             .OrderBy(a => a.AppointmentTime)
             .ToListAsync();
 
+    public async Task<IEnumerable<Appointment>> GetRecentAppointmentsAsync(DateTime fromDate)
+    {
+        return await _context.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Doctor)
+            .ThenInclude(d => d.Department)
+            .Where(a => a.AppointmentDate >= fromDate)
+            .OrderByDescending(a => a.AppointmentDate)
+            .Take(10)
+            .ToListAsync();
+    }
+
     public async Task<bool> HasConflictAsync(
         int doctorId, DateTime date, TimeSpan time, int? excludeId = null)
         => await _dbSet.AnyAsync(a =>

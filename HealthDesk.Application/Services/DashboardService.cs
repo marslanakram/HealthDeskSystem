@@ -50,8 +50,11 @@ public class DashboardService : IDashboardService
         var todaysAppts = await _uow.Appointments
             .GetTodaysAppointmentsAsync();
 
+        //var recentAppts = await _uow.Appointments
+        //    .FindAsync(a => a.AppointmentDate >= today.AddDays(-7));
+        
         var recentAppts = await _uow.Appointments
-            .FindAsync(a => a.AppointmentDate >= today.AddDays(-7));
+        .GetRecentAppointmentsAsync(today.AddDays(-7));
 
         var paidThisMonth = await _uow.Appointments
             .FindAsync(a => a.IsPaid &&

@@ -41,14 +41,25 @@
                         <td class="text-muted fw-semibold">Location</td>
                         <td>@(Model.Location ?? "—")</td>
                     </tr>
-                    <tr>
+                   @*  <tr>
                         <td class="text-muted fw-semibold">Doctors</td>
                         <td>
                             <span class="badge bg-info-subtle text-info">
                                 @Model.DoctorCount doctor(s)
                             </span>
                         </td>
-                    </tr>
+                    </tr> *@
+
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-semibold">Doctors</label>
+                        <p class="mb-0 fw-semibold">
+                            <a href="javascript:void(0);"
+                               onclick="showDoctors(@Model.Id)"
+                               class="badge bg-info-subtle text-info text-decoration-none">
+                                @Model.DoctorCount doctor(s)
+                            </a>
+                        </p>
+                    </div>
                     <tr>
                         <td class="text-muted fw-semibold">Status</td>
                         <td>
@@ -95,4 +106,32 @@
             </div>
         </div>
     </div>
+    <!-- Doctor Modal -->
+    <div class="modal fade" id="doctorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Doctors in this Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="doctorModalBody">
+                    <!-- Doctors list will load here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    @section Scripts {
+        <script>
+            function showDoctors(deptId) {
+                fetch(`/Department/GetDoctors?departmentId=${deptId}`)
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById("doctorModalBody").innerHTML = html;
+                        new bootstrap.Modal(document.getElementById("doctorModal")).show();
+                    });
+            }
+        </script>
+    }
 </div>
