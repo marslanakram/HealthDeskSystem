@@ -128,7 +128,8 @@
                             <tr>
                                 <td class="text-muted">
                                     <small>
-                                        @log.Timestamp.ToString("dd MMM yyyy HH:mm:ss")
+                                        @* @log.Timestamp.ToString("dd MMM yyyy hh:mm:ss tt") *@
+                                        @log.Timestamp.ToString("dd MMM yyyy hh:mm tt")
                                     </small>
                                 </td>
                                 <td class="fw-semibold">@log.UserName</td>
