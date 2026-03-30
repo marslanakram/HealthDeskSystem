@@ -37,10 +37,10 @@
         else
         {
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table id="prescriptionsTable" class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>#</th>
+                            @* <th>#</th> *@
                             <th>Patient</th>
                             <th>Doctor</th>
                             <th>Diagnosis</th>
@@ -53,9 +53,9 @@
                         @foreach (var rx in Model)
                         {
                             <tr>
-                                <td class="text-muted fw-semibold">
+                                @* <td class="text-muted fw-semibold">
                                     #@rx.Id
-                                </td>
+                                </td> *@
                                 <td class="fw-semibold">@rx.PatientName</td>
                                 <td>Dr. @rx.DoctorName</td>
                                 <td class="text-muted" style="max-width:200px;">
@@ -143,6 +143,21 @@
 </div>
 
 @section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            initDataTable('#prescriptionsTable', {
+                order: [[1, 'asc']],
+                columnDefs: [
+                    { orderable: false, targets: 5 }
+                ],
+                language: {
+                    searchPlaceholder: "Search prescriptions..."
+                }
+            });
+
+        });
+    </script>
     <script>
         function confirmDelete(id, name) {
             document.getElementById('deleteName').textContent = name;
