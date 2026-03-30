@@ -60,6 +60,14 @@ public class MappingProfile : Profile
         CreateMap<CreateDepartmentDto, Department>();
         CreateMap<UpdateDepartmentDto, Department>();
         // ── AuditLog Mappings ─────────────────────────────────────────
-        CreateMap<AuditLog, AuditLogDto>();
+        //CreateMap<AuditLog, AuditLogDto>();
+        CreateMap<AuditLog, AuditLogDto>()
+       .ForMember(dest => dest.Timestamp,
+       opt => opt.MapFrom(src =>
+           TimeZoneInfo.ConvertTimeFromUtc(
+               src.Timestamp,
+               TimeZoneInfo.FindSystemTimeZoneById("Pakistan Standard Time")
+           )
+       ));
     }
 }
