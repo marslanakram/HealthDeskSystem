@@ -98,8 +98,10 @@ public class DashboardService : IDashboardService
     {
         var today = DateTime.Today;
         var monthStart = new DateTime(today.Year, today.Month, 1);
+        //var todaysAppts = await _uow.Appointments
+        //    .FindAsync(a => a.DoctorId == doctorId && a.AppointmentDate.Date == today);
         var todaysAppts = await _uow.Appointments
-            .FindAsync(a => a.DoctorId == doctorId && a.AppointmentDate.Date == today);
+            .GetTodaysAppointmentsAsync();
 
         return new DashboardDto
         {
