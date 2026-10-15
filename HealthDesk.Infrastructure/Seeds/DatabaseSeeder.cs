@@ -30,7 +30,8 @@ public static class DatabaseSeeder
         var superAdminEmail = configuration["SeedSuperAdmin:Email"]
             ?? "superadmin@healthdesk.com";
         var superAdminPassword = configuration["SeedSuperAdmin:Password"]
-            ?? "***REMOVED***";
+            ?? throw new InvalidOperationException(
+        "SeedSuperAdmin:Password is missing from configuration.");
 
         var superAdmin = await userManager.FindByEmailAsync(superAdminEmail);
 
@@ -64,7 +65,8 @@ public static class DatabaseSeeder
         IConfiguration configuration)
     {
         var email = configuration["SeedAdmin:Email"] ?? "admin@healthdesk.com";
-        var password = configuration["SeedAdmin:Password"] ?? "***REMOVED***";
+        var password = configuration["SeedAdmin:Password"] ?? throw new InvalidOperationException(
+        "SeedAdmin:Password is missing from configuration.");
         var name = configuration["SeedAdmin:FullName"] ?? "System Administrator";
 
         if (await userManager.FindByEmailAsync(email) is null)
