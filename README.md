@@ -6,6 +6,18 @@ This project demonstrates practical implementation of Clean Architecture, Entity
 
 **Live Demo:** [healthdesk.bsite.net](https://healthdesk.bsite.net/)
 
+## Demo Tenants
+
+Three clinics are pre-configured on the live demo. These accounts are provided for demonstration and evaluation purposes.
+
+| Clinic | Email | Password |
+|---|---|---|
+| Clinic 1 | `admin@healthdesk.com` | `Admin@12345` |
+| Clinic 2 | `admin@cityhospital.com` | `city12345` |
+
+**Note:** Demo accounts should have restricted permissions and must not provide access to sensitive or real user data. The Super Admin manages the platform and can onboard new tenants.
+
+
 ## Table of Contents
 
 - [Overview](#overview)
