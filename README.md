@@ -6,13 +6,15 @@ This project demonstrates practical implementation of Clean Architecture, Entity
 
 **Live Demo:** [healthdesk.bsite.net](https://healthdesk.bsite.net/)
 ## Screenshots
-
-### Admin Dashboard
-
-![HealthDesk Admin Dashboard](screenshots/admin-dashboard.png)
 ### Super Admin Dashboard
 
 ![HealthDesk Super Admin Dashboard](screenshots/superadmin-dashboard.png)
+### Admin Dashboard
+
+![HealthDesk Admin Dashboard](screenshots/admin-dashboard.png)
+### Patient Management
+
+![HealthDesk Patient Management](screenshots/patient-management.png)
 
 ## Demo Tenants
 
