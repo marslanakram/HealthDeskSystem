@@ -27,13 +27,18 @@ public static class DatabaseSeeder
         UserManager<ApplicationUser> userManager,
         IConfiguration configuration)
     {
-        var superAdminEmail = configuration["SeedSuperAdmin:Email"]
-            ?? "superadmin@healthdesk.com";
-        var superAdminPassword = configuration["SeedSuperAdmin:Password"]
-            ?? throw new InvalidOperationException(
+
+        
+var superAdminEmail = configuration["SeedSuperAdmin:Email"]
+    ?? "superadmin@healthdesk.com";
+
+var superAdminPassword = configuration["SeedSuperAdmin:Password"]
+    ?? throw new InvalidOperationException(
         "SeedSuperAdmin:Password is missing from configuration.");
 
-        var superAdmin = await userManager.FindByEmailAsync(superAdminEmail);
+var superAdmin = await userManager.FindByEmailAsync(superAdminEmail);
+
+
 
         if (superAdmin is null)
         {
