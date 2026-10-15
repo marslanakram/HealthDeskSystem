@@ -13,7 +13,7 @@ Three clinics are pre-configured on the live demo. These accounts are provided f
 | Clinic | Email | Password |
 |---|---|---|
 | Clinic 1 | `admin@healthdesk.com` | `Admin@12345` |
-| Clinic 2 | `admin@cityhospital.com` | `city12345` |
+| Clinic 2 | `admin@cityhospital.com` | `Admin@city12345` |
 
 **Note:** Demo accounts should have restricted permissions and must not provide access to sensitive or real user data. The Super Admin manages the platform and can onboard new tenants.
 
