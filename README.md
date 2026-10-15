@@ -10,6 +10,9 @@ This project demonstrates practical implementation of Clean Architecture, Entity
 ### Admin Dashboard
 
 ![HealthDesk Admin Dashboard](screenshots/admin-dashboard.png)
+### Super Admin Dashboard
+
+![HealthDesk Super Admin Dashboard](screenshots/superadmin-dashboard.png)
 
 ## Demo Tenants
 
