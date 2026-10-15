@@ -13,15 +13,24 @@ namespace HealthDesk.Web.Areas.Admin.Controllers;
 public class RoleManagementController : Controller
 {
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly ITenantPermissionService _permissionService;
+    private readonly ITenantService _tenantService;
     private readonly ILogger<RoleManagementController> _logger;
     private readonly IAuditService _auditService;
 
+    // These roles belong to the platform level — never shown or editable in tenant panel
+    private static readonly string[] PlatformRoles = { "SuperAdmin" };
+
     public RoleManagementController(
         RoleManager<IdentityRole> roleManager,
+        ITenantPermissionService permissionService,
+        ITenantService tenantService,
         ILogger<RoleManagementController> logger,
         IAuditService auditService)
     {
         _roleManager = roleManager;
+        _permissionService = permissionService;
+        _tenantService = tenantService;
         _logger = logger;
         _auditService = auditService;
     }
@@ -32,7 +41,11 @@ public class RoleManagementController : Controller
         ViewData["ActiveMenu"] = "Roles";
         ViewData["Title"] = "Role Management";
 
-        var roles = await _roleManager.Roles.ToListAsync();
+        // Never expose platform-level roles in the tenant admin panel
+        var roles = await _roleManager.Roles
+            .Where(r => !PlatformRoles.Contains(r.Name))
+            .ToListAsync();
+
         return View(roles);
     }
 
@@ -43,82 +56,115 @@ public class RoleManagementController : Controller
         ViewData["Title"] = "Manage Permissions";
 
         var role = await _roleManager.FindByIdAsync(id);
-        if (role is null)
+
+        // Block editing platform-level roles entirely
+        if (role is null || PlatformRoles.Contains(role.Name))
         {
-            TempData["Error"] = "Role not found.";
+            TempData["Error"] = "Role not found or cannot be edited.";
             return RedirectToAction(nameof(Index));
         }
 
-        var roleClaims = await _roleManager.GetClaimsAsync(role);
-        var rolePermissions = roleClaims
-            .Where(c => c.Type == "Permission")
-            .Select(c => c.Value)
-            .ToList();
-
-        var allPermissions = PermissionConstants.GetPermissionsByCategory();
+        // Get TENANT-SPECIFIC permissions for this role
+        var tenantId = _tenantService.GetCurrentTenantId();
+        var grantedPermissions = await _permissionService
+            .GetPermissionsForRoleAsync(tenantId, role.Name!);
 
         var model = new RolePermissionsViewModel
         {
             RoleId = role.Id,
             RoleName = role.Name!,
-            AllPermissions = allPermissions,
-            GrantedPermissions = rolePermissions
+            AllPermissions = PermissionConstants.GetPermissionsByCategory(),
+            GrantedPermissions = grantedPermissions
         };
 
         return View(model);
     }
 
-    // ── POST: Admin/RoleManagement/Permissions ────────────────────
+    // ── POST: Admin/RoleManagement/UpdatePermissions ──────────────
+    //[HttpPost]
+    //[ValidateAntiForgeryToken]
+    //public async Task<IActionResult> UpdatePermissions(RolePermissionsViewModel model)
+    //{
+    //    var role = await _roleManager.FindByIdAsync(model.RoleId);
+
+    //    // Double-check: block platform-level roles even via direct POST
+    //    if (role is null || PlatformRoles.Contains(role.Name))
+    //    {
+    //        TempData["Error"] = "Role not found or cannot be edited from this panel.";
+    //        return RedirectToAction(nameof(Index));
+    //    }
+
+    //    // Remove all existing permission claims
+    //    var existingClaims = await _roleManager.GetClaimsAsync(role);
+
+    //    var oldPermissions = existingClaims
+    //        .Where(c => c.Type == "Permission")
+    //        .Select(c => c.Value)
+    //        .ToList();
+
+    //    foreach (var claim in existingClaims.Where(c => c.Type == "Permission"))
+    //        await _roleManager.RemoveClaimAsync(role, claim);
+
+    //    // Add new permissions
+    //    if (model.SelectedPermissions is not null)
+    //    {
+    //        foreach (var permission in model.SelectedPermissions)
+    //        {
+    //            await _roleManager.AddClaimAsync(role,
+    //                new Claim("Permission", permission));
+    //        }
+    //    }
+
+    //    // ── Audit Log ─────────────────────────────────────────────
+    //    await _auditService.LogAsync(
+    //        action: "PermissionChanged",
+    //        entityName: "Role",
+    //        entityId: null,
+    //        oldValues: new { Permissions = oldPermissions },
+    //        newValues: new { Permissions = model.SelectedPermissions },
+    //        changes: $"Permissions updated for role '{role.Name}'"
+    //    );
+
+    //    TempData["Success"] = $"Permissions updated for role '{role.Name}'.";
+    //    return RedirectToAction(nameof(Index));
+    //}
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePermissions(RolePermissionsViewModel model)
     {
         var role = await _roleManager.FindByIdAsync(model.RoleId);
-        if (role is null)
+        if (role is null || PlatformRoles.Contains(role.Name))
         {
-            TempData["Error"] = "Role not found.";
+            TempData["Error"] = "Role not found or cannot be edited.";
             return RedirectToAction(nameof(Index));
         }
 
-        // Remove all existing permission claims
-        var existingClaims = await _roleManager.GetClaimsAsync(role);
+        var tenantId = _tenantService.GetCurrentTenantId();
 
-        var oldPermissions = existingClaims
-        .Where(c => c.Type == "Permission")
-        .Select(c => c.Value)
-        .ToList();
+        var oldPermissions = await _permissionService
+            .GetPermissionsForRoleAsync(tenantId, role.Name!);
 
-        foreach (var claim in existingClaims.Where(c => c.Type == "Permission"))
-        {
-            await _roleManager.RemoveClaimAsync(role, claim);
-        }
+        // ── This now saves to TenantRolePermissions table ─────
+        await _permissionService.SavePermissionsForRoleAsync(
+            tenantId,
+            role.Name!,
+            model.SelectedPermissions ?? new List<string>());
 
-        // Add new permissions
-        if (model.SelectedPermissions is not null)
-        {
-            foreach (var permission in model.SelectedPermissions)
-            {
-                await _roleManager.AddClaimAsync(role,
-                    new Claim("Permission", permission));
-            }
-        }
-
-        // ── Audit Log ─────────────────────────────────────────────────
         await _auditService.LogAsync(
             action: "PermissionChanged",
-            entityName: "Role",
+            entityName: "TenantRolePermission",
             entityId: null,
             oldValues: new { Permissions = oldPermissions },
             newValues: new { Permissions = model.SelectedPermissions },
-            changes: $"Permissions updated for role '{role.Name}'"
-        );
+            changes: $"Tenant {tenantId}: permissions updated for role '{role.Name}'");
 
         TempData["Success"] = $"Permissions updated for role '{role.Name}'.";
         return RedirectToAction(nameof(Index));
     }
 }
 
-// ViewModel
+// ── ViewModel ────────────────────────────────────────────────────
 public class RolePermissionsViewModel
 {
     public string RoleId { get; set; } = string.Empty;

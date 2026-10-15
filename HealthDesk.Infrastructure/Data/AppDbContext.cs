@@ -233,6 +233,7 @@
 using HealthDesk.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace HealthDesk.Infrastructure.Data;
 
@@ -252,6 +253,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Prescription> Prescriptions => Set<Prescription>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<TenantRolePermission> TenantRolePermissions => Set<TenantRolePermission>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -260,6 +262,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         // ── Rename Identity tables ────────────────────────────────
         builder.Entity<ApplicationUser>().ToTable("Users");
         builder.HasDefaultSchema("dbo");
+
+        // ── ApplicationUser Configuration ─────────────────────────
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(u => u.TenantId).HasDefaultValue(0);
+            entity.HasIndex(u => u.TenantId);
+        });
 
         // ── Tenant Configuration ──────────────────────────────────
         builder.Entity<Tenant>(entity =>
@@ -276,9 +285,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(d => d.Id);
             entity.Property(d => d.Name).IsRequired().HasMaxLength(100);
             entity.Property(d => d.Description).HasMaxLength(500);
-
-            // Soft delete only (tenant filter applied at runtime)
-            entity.HasQueryFilter(d => !d.IsDeleted);
         });
 
         // ── Doctor Configuration ──────────────────────────────────
@@ -298,8 +304,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                 .WithOne(u => u.Doctor)
                 .HasForeignKey<Doctor>(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasQueryFilter(d => !d.IsDeleted);
         });
 
         // ── Patient Configuration ─────────────────────────────────
@@ -314,8 +318,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                 .WithOne(u => u.Patient)
                 .HasForeignKey<Patient>(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasQueryFilter(p => !p.IsDeleted);
         });
 
         // ── Appointment Configuration ─────────────────────────────
@@ -335,8 +337,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(d => d.Appointments)
                 .HasForeignKey(a => a.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasQueryFilter(a => !a.IsDeleted);
         });
 
         // ── Prescription Configuration ────────────────────────────
@@ -361,8 +361,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(d => d.Prescriptions)
                 .HasForeignKey(p => p.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasQueryFilter(p => !p.IsDeleted);
         });
 
         // ── AuditLog Configuration ────────────────────────────────
@@ -374,20 +372,74 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(a => a.UserName).HasMaxLength(150);
             entity.Property(a => a.IpAddress).HasMaxLength(45);
         });
+
+        builder.Entity<TenantRolePermission>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.HasIndex(t => new { t.TenantId, t.RoleName, t.Permission }).IsUnique();
+            entity.Property(t => t.RoleName).IsRequired().HasMaxLength(50);
+            entity.Property(t => t.Permission).IsRequired().HasMaxLength(200);
+
+            entity.HasOne(t => t.Tenant)
+                .WithMany()
+                .HasForeignKey(t => t.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ══════════════════════════════════════════════════════════
+        // DYNAMIC TENANT QUERY FILTERS (Applied at Runtime)
+        // ══════════════════════════════════════════════════════════
+        builder.Entity<Department>().HasQueryFilter(CreateTenantFilter<Department>());
+        builder.Entity<Doctor>().HasQueryFilter(CreateTenantFilter<Doctor>());
+        builder.Entity<Patient>().HasQueryFilter(CreateTenantFilter<Patient>());
+        builder.Entity<Appointment>().HasQueryFilter(CreateTenantFilter<Appointment>());
+        builder.Entity<Prescription>().HasQueryFilter(CreateTenantFilter<Prescription>());
+        builder.Entity<AuditLog>().HasQueryFilter(CreateAuditLogTenantFilter());
+
     }
 
-    // ── Tenant Management ─────────────────────────────────────────
-    public void SetCurrentTenant(int tenantId)
+    // ══════════════════════════════════════════════════════════════
+    // DYNAMIC FILTER EXPRESSION BUILDER
+    // ══════════════════════════════════════════════════════════════
+
+    private Expression<Func<T, bool>> CreateTenantFilter<T>() where T : TenantEntity
+    {
+        // If _currentTenantId is null (SuperAdmin, no tenant selected)
+        // → skip tenant filter so SuperAdmin can see all data
+        // If _currentTenantId is set → strictly filter to that tenant only
+        return entity => !entity.IsDeleted &&
+            (_currentTenantId == null || entity.TenantId == _currentTenantId.Value);
+    }
+
+    private Expression<Func<AuditLog, bool>> CreateAuditLogTenantFilter()
+    {
+        return log => !log.IsDeleted &&
+            (_currentTenantId == null || log.TenantId == _currentTenantId);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // TENANT CONTEXT MANAGEMENT
+    // ══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Sets the current tenant context for this DbContext instance.
+    /// Pass null to disable tenant filtering (SuperAdmin mode).
+    /// Must be called before querying to enable tenant filtering.
+    /// </summary>
+    public void SetCurrentTenant(int? tenantId)
     {
         _currentTenantId = tenantId;
     }
 
-    public int GetCurrentTenantId()
-    {
-        return _currentTenantId ?? 1;
-    }
+    /// <summary>
+    /// Returns the current tenant ID. Null means no filter (SuperAdmin).
+    /// </summary>
+    public int? GetCurrentTenantId() => _currentTenantId;
 
-    // ── Auto-set Timestamps ───────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // AUTO-SET TIMESTAMPS ON SAVE
+    // ══════════════════════════════════════════════════════════════
+
     public override async Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)
     {

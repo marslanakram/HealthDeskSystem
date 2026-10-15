@@ -533,10 +533,8 @@ else
                                     <td>
                                         @if (appt.Fee.HasValue)
                                         {
-                                            <span class="text-success
-                                                                         fw-semibold">
-                                                $@appt.Fee.Value
-                                                .ToString("F2")
+                                            <span class="text-success fw-semibold">
+                                                $@appt.Fee.Value.ToString("F2")
                                             </span>
                                         }
                                         else
@@ -600,8 +598,8 @@ else
                                 <tr>
                                     <td>
                                         <div class="fw-semibold">
-                                            @appt.AppointmentDate
-                                            .ToString("dd MMM yyyy")
+                                            @(appt.AppointmentDate
+                                            .ToString("dd MMM yyyy"))
                                         </div>
                                         <small class="text-muted">
                                             @appt.TimeDisplay

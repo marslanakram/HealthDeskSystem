@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace HealthDesk.Domain.Entities
@@ -24,6 +25,8 @@ namespace HealthDesk.Domain.Entities
         // Navigation
         public Patient Patient { get; set; } = null!;
         public Doctor Doctor { get; set; } = null!;
+        
+        [JsonIgnore]
         public Prescription? Prescription { get; set; }
     }
 }

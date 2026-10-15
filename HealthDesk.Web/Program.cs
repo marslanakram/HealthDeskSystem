@@ -199,7 +199,9 @@ using HealthDesk.Infrastructure.Authorization;
 using HealthDesk.Infrastructure.Data;
 using HealthDesk.Infrastructure.Repositories;
 using HealthDesk.Infrastructure.Seeds;
-using HealthDesk.Infrastructure.TenantService;
+using HealthDesk.Infrastructure.TenantServices;
+using HealthDesk.Web.Identity;
+using HealthDesk.Web.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -265,7 +267,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+.AddClaimsPrincipalFactory<CustomUserClaimsPrincipalFactory>();
 
 // ── Authorization Policies ────────────────────────────────────
 builder.Services.AddAuthorization(options =>
@@ -315,6 +318,8 @@ builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ITenantPermissionService, TenantPermissionService>();
 
 // ── MVC ───────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
@@ -331,8 +336,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
-app.UseSession();  // Must be BEFORE Authentication
+app.UseSession();
+app.UseTenantResolution();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -371,6 +376,16 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedAdminUserAsync(userManager, builder.Configuration);
     //await DatabaseSeeder.SeedStaffUsersAsync(userManager);
     await DatabaseSeeder.SeedRolePermissionsAsync(roleManager);
+
+    var permService = services
+        .GetRequiredService<ITenantPermissionService>();
+
+    var allTenants = await context.Tenants
+        .Where(t => t.IsActive)
+        .ToListAsync();
+
+    foreach (var tenant in allTenants)
+        await permService.SeedDefaultPermissionsAsync(tenant.Id);
 }
 
 // ── Routes ────────────────────────────────────────────────────
@@ -380,6 +395,6 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

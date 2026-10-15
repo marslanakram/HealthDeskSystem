@@ -87,29 +87,53 @@ public class TenantSaveChangesInterceptor : SaveChangesInterceptor
 
         var httpContext = _httpContextAccessor.HttpContext;
 
-        // During seeding or migration, there's no HTTP context - use tenant 1
+        // During seeding / migration — no HTTP context, use tenant 1
         int tenantId = 1;
 
-        if (httpContext != null)
+        if (httpContext != null && httpContext.User.Identity?.IsAuthenticated == true)
         {
-            // Try to get from session
+            // SuperAdmin saving while impersonating a tenant?
+            // Check session first (SuperAdmin may have switched tenant)
             var sessionTenant = httpContext.Session.GetInt32("TenantId");
             if (sessionTenant.HasValue)
             {
                 tenantId = sessionTenant.Value;
+                Console.WriteLine($"[Interceptor] ✅ TenantId from session: {tenantId}");
             }
-            else if (httpContext.User.IsInRole("SuperAdmin"))
+            else
             {
-                // SuperAdmin defaults to tenant 1
-                tenantId = 1;
+                // Read from TenantId claim (set at login for regular users)
+                var tenantClaim = httpContext.User.FindFirst("TenantId");
+                if (tenantClaim != null && int.TryParse(tenantClaim.Value, out var claimTenantId))
+                {
+                    tenantId = claimTenantId;
+                    Console.WriteLine($"[Interceptor] ✅ TenantId from claim: {tenantId}");
+                }
+                else if (httpContext.User.IsInRole("SuperAdmin"))
+                {
+                    // SuperAdmin writing platform-level data — use 0
+                    // TenantEntity additions will be skipped (TenantId stays as-is)
+                    Console.WriteLine($"[Interceptor] SuperAdmin with no tenant context — skipping TenantId assignment");
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine($"[Interceptor] ⚠️ No TenantId found for {httpContext.User.Identity.Name}, defaulting to 1");
+                }
             }
         }
+        else
+        {
+            Console.WriteLine($"[Interceptor] Seeding/migration mode — defaulting TenantId to {tenantId}");
+        }
 
+        // Apply TenantId only to newly added TenantEntity records with no TenantId set
         foreach (var entry in context.ChangeTracker.Entries<TenantEntity>())
         {
             if (entry.State == EntityState.Added && entry.Entity.TenantId == 0)
             {
                 entry.Entity.TenantId = tenantId;
+                Console.WriteLine($"[Interceptor] ✅ Set TenantId={tenantId} on {entry.Entity.GetType().Name}");
             }
         }
     }

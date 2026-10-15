@@ -79,7 +79,7 @@
         else
         {
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table id="appointmentsTable" class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Date & Time</th>
@@ -97,8 +97,9 @@
                             <tr>
                                 <td>
                                     <div class="fw-semibold">
-                                        @appt.AppointmentDate
-                                        .
+                                        @(appt.AppointmentDate
+                                            .ToString("dd MMM yyyy"))
+
                                     </div>
                                     <small class="text-muted">
                                         <i class="bi bi-clock me-1"></i>
@@ -191,3 +192,20 @@
         }
     </div>
 </div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            initDataTable('#appointmentsTable', {
+                order: [[1, 'asc']],
+                columnDefs: [
+                    { orderable: false, targets: 6 }
+                ],
+                language: {
+                    searchPlaceholder: "Search appointments..."
+                }
+            });
+
+        });
+    </script>
+}

@@ -35,8 +35,14 @@ public class AuditService : IAuditService
         var httpContext = _httpContextAccessor.HttpContext;
         var user = httpContext?.User;
 
+        var tenantIdClaim = user?.FindFirst("TenantId")?.Value;
+        int? tenantId = string.IsNullOrEmpty(tenantIdClaim)
+            ? null
+            : int.Parse(tenantIdClaim);
+
         var auditLog = new AuditLog
         {
+            TenantId = tenantId,
             UserId = user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "System",
             UserName = user?.Identity?.Name ?? "System",
             Action = action,
@@ -58,12 +64,37 @@ public class AuditService : IAuditService
         await _uow.SaveChangesAsync();
     }
 
+    //public async Task<IEnumerable<AuditLogDto>> GetAllAsync()
+    //{
+    //    var logs = await _uow.AuditLogs.GetAllAsync();
+    //    return _mapper.Map<IEnumerable<AuditLogDto>>(
+    //        logs.OrderByDescending(l => l.Timestamp));
+    //}
     public async Task<IEnumerable<AuditLogDto>> GetAllAsync()
     {
-        var logs = await _uow.AuditLogs.GetAllAsync();
-        return _mapper.Map<IEnumerable<AuditLogDto>>(
-            logs.OrderByDescending(l => l.Timestamp));
+        var httpContext = _httpContextAccessor.HttpContext;
+        var isSuperAdmin = httpContext?.User.IsInRole("SuperAdmin") == true;
+
+        IEnumerable<AuditLog> logs;
+
+        if (isSuperAdmin)
+        {
+            // SuperAdmin sees ALL audit logs (bypass tenant filter)
+            // We need to temporarily disable the filter
+            logs = await _uow.AuditLogs.GetAllAsync();
+        }
+        else
+        {
+            // Regular users only see their tenant's logs (filter applied automatically)
+            logs = await _uow.AuditLogs.GetAllAsync();
+        }
+
+        var result = _mapper.Map<List<AuditLogDto>>(
+            logs.OrderByDescending(l => l.Timestamp).ToList());
+
+        return result;
     }
+
 
     public async Task<IEnumerable<AuditLogDto>> GetByUserAsync(string userId)
     {
@@ -83,8 +114,32 @@ public class AuditService : IAuditService
 
     public async Task<IEnumerable<AuditLogDto>> GetRecentAsync(int count = 50)
     {
-        var logs = await _uow.AuditLogs.GetAllAsync();
-        return _mapper.Map<IEnumerable<AuditLogDto>>(
-            logs.OrderByDescending(l => l.Timestamp).Take(count));
+        var httpContext = _httpContextAccessor.HttpContext;
+        var isSuperAdmin = httpContext?.User.IsInRole("SuperAdmin") == true;
+
+        IEnumerable<AuditLog> logs;
+
+        if (isSuperAdmin)
+        {
+            // SuperAdmin sees ALL logs across all tenants
+            logs = await _uow.AuditLogs.GetAllAsync();
+        }
+        else
+        {
+            // Regular users see only their tenant's logs
+            logs = await _uow.AuditLogs.GetAllAsync();
+        }
+
+        var result = _mapper.Map<List<AuditLogDto>>(
+            logs.OrderByDescending(l => l.Timestamp).Take(count).ToList());
+
+        return result;
     }
+
+    //public async Task<IEnumerable<AuditLogDto>> GetRecentAsync(int count = 50)
+    //{
+    //    var logs = await _uow.AuditLogs.GetAllAsync();
+    //    return _mapper.Map<IEnumerable<AuditLogDto>>(
+    //        logs.OrderByDescending(l => l.Timestamp).Take(count));
+    //}
 }
