@@ -5,6 +5,11 @@
 This project demonstrates practical implementation of Clean Architecture, Entity Framework Core, ASP.NET Core Identity, tenant isolation, custom authorization, and audit logging.
 
 **Live Demo:** [healthdesk.bsite.net](https://healthdesk.bsite.net/)
+## Screenshots
+
+### Admin Dashboard
+
+![HealthDesk Admin Dashboard](screenshots/admin-dashboard.png)
 
 ## Demo Tenants
 
